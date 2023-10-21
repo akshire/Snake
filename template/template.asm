@@ -56,6 +56,7 @@ main:
     ; TODO: Finish this procedure.
 
     ret
+    ;ret
 
 
 ; BEGIN: clear_leds
