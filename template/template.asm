@@ -162,6 +162,31 @@ hit_test:
 
 ; BEGIN: get_input
 get_input:
+	addi t2, zero, BUTTONS 
+	addi t0, t2, 0x0004
+	ldw t1, 0x0000(t0)
+	
+	
+	addi t3, zero, 0x2710 ; 10000
+	bge t1, t3, case5
+	
+	srli t3, t3, 0x0001 ; 0x01000
+	bge t1, t3, case4
+	
+	srli t3, t3, 0x0001 ; 0x00100
+	bge t1, t3, case3
+	
+	srli t3, t3, 0x0001 ; 0x00010
+	bge t1, t3, case2
+	
+	srli t3, t3, 0x0001 ;0x00001
+	bge t1, t3, case1
+	
+	bge t1, zero, case0 ;00000
+	
+	
+	
+
 
 ; END: get_input
 
