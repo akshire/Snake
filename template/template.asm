@@ -54,7 +54,18 @@ addi    sp, zero, LEDS
 ;     This procedure should never return.
 main:
     ; TODO: Finish this procedure.
-
+	call clear_leds
+	
+	addi a0, zero, 0x0000
+	addi a1, zero, 0x0000
+	
+	call set_pixel
+	
+	addi a0, zero, 0x0001
+	addi a1, zero, 0x0001
+	
+	call set_pixel
+	
     ret
     ;ret
 
@@ -64,12 +75,63 @@ clear_leds:
 	stw zero, LEDS(zero)
 	stw zero, 0x2004(zero)
 	stw zero, 0x2008(zero)
-
+	ret
 ; END: clear_leds
 
 
 ; BEGIN: set_pixel
 set_pixel:
+	addi t0, zero, 0x0003
+	addi t1, zero, 0x0007
+	addi t2, zero, 0x000b
+	addi t5, zero, 0x0001
+	add t6, zero, a0
+	
+	bge t0, a0, caseLed0
+	bge t1, a0, caseLed1
+	bge t2, a0, caseLed2
+	
+	
+	caseLed0:
+	
+	addi t3, zero, 0x0000
+	addi t4, zero, 0x0000
+	beq a0, t3, done
+	
+	forLoop:
+	
+	
+	addi t4, t4, 0x0008
+	addi t3, t3, 0x0001
+	
+	bne a0, t3, forLoop
+	
+	done: sll t5, t5, t4
+	sll t5, t5, a1
+	
+	ldw t7, 0x2000(t6)
+	
+	or t5, t5, t7
+	
+	stw t5, 0x2000(t6)
+	
+	jmpi finally
+	
+	caseLed1:
+	addi t0, t0, 0x0001
+	sub a0, a0, t0
+	jmpi caseLed0
+	
+	
+	caseLed2:
+	addi t1, t1, 0x0001
+	sub a0, a0, t1
+	jmpi caseLed0
+	
+	
+
+	finally: ret
+	
 
 ; END: set_pixel
 
