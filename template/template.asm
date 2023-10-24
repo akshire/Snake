@@ -164,41 +164,135 @@ hit_test:
 get_input:
 	addi t2, zero, BUTTONS 
 	addi t0, t2, 0x0004
+	
 	ldw t1, 0x0000(t0)
 	
 	
-	addi t3, zero, 0x2710 ; 10000
+	addi t3, zero, 0x0010 ; 10000
 	bge t1, t3, case5
 	
-	srli t3, t3, 0x0001 ; 0x01000
+	srli t3, t3, 0x0001 ; 01000
 	bge t1, t3, case4
 	
-	srli t3, t3, 0x0001 ; 0x00100
+	srli t3, t3, 0x0001 ; 00100
 	bge t1, t3, case3
 	
-	srli t3, t3, 0x0001 ; 0x00010
+	srli t3, t3, 0x0001 ; 00010
 	bge t1, t3, case2
 	
-	srli t3, t3, 0x0001 ;0x00001
+	srli t3, t3, 0x0001 ; 00001
 	bge t1, t3, case1
 	
-	bge t1, zero, case0 ;00000
+	bge t1, zero, case0 ; 00000
 	
+	case5 :
+		addi t4, zero, 5
+		add v0,t4,zero
+		jmpi case0
 	
+	case4 :
+		addi t4, zero, 1
+		beq v0,t4, case0
+		addi t5,zero,4
+		add v0,t5,zero
+		jmpi case0
 	
-
+	case3 :
+		addi t4, zero, 2
+		beq v0,t4, case0
+		addi t5,zero,3
+		add v0,t5,zero
+		jmpi case0
+	
+	case2 :
+		addi t4, zero, 3
+		beq v0,t4, case0
+		addi t5,zero,2
+		add v0,t5,zero
+		jmpi case0
+	
+	case1 :
+		addi t4, zero, 4
+		beq v0,t4, case0
+		addi t5,zero,1
+		add v0,t5,zero
+		jmpi case0
+	
+	case0 :
+		stw zero, 0x0000(t0)
+		ret
 
 ; END: get_input
 
 
 ; BEGIN: draw_array
 draw_array:
+	
 
 ; END: draw_array
 
 
 ; BEGIN: move_snake
 move_snake:
+	addi t0,zero,0
+	beq v0,t0,move_none
+	addi t0,zero,1
+	beq v0,t0,move_left
+	addi t0,zero,2
+	beq v0,t0,move_up
+	addi t0,zero,3
+	beq v0,t0,move_down
+	addi t0,zero,4
+	beq v0,t0,move_right
+	addi t0,zero,5
+	beq v0,t0,move_cp
+	
+	
+	move_none:
+	
+	move_left:
+	bne a0, zero, left_collide
+	
+	
+	left_no_colide:
+	
+	
+	
+	ldw t1, HEAD_X(zero)
+	addi t2, zero, 1
+	sub t1, t1, t2
+	stw t1, HEAD_X(zero)
+	
+	move_up:
+	
+	ldw t1, HEAD_Y(zero)
+	addi t2, zero, 1
+	sub t1, t1, t2
+	stw t1, HEAD_Y(zero)
+	
+	move_down:
+	
+	ldw t1, HEAD_Y(zero)
+	addi t1, t1, 1
+	stw t1, HEAD_Y
+	
+	
+	
+	move_right:
+	
+	ldw t3, TAIL_X
+	
+	ldw t1, HEAD_X(zero)
+	addi t1, t1, 1
+	stw t1, HEAD_X
+	
+	move_cp:
+	
+	
+	
+	
+	
+	
 
 ; END: move_snake
 
