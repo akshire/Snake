@@ -225,6 +225,11 @@ true_case_nothing:
 ;-----------------------------------------------------------------------------------------
 
 ; BEGIN: draw_array
+; arguments
+;     None
+;
+; return values
+;     None
 draw_array:
 
 	addi t0, zero, 0
@@ -251,13 +256,19 @@ draw_array:
 		addi t2, zero, 1; increment x
 
 	skip:
-	addi t5, zero, 96
-	bne t1, t5, for_loop_draw_array
+		addi t5, zero, 96
+		bne t1, t5, for_loop_draw_array
+		ret
 ; END: draw_array
 
 ;-----------------------------------------------------------------------------------------
 
 ; BEGIN: move_snake
+; arguments
+;     a0 <- = 1 if the snake’s head collides with the food, else 0
+;
+; return values
+;     None
 move_snake:
 	addi t0,zero,0
 	beq v0,t0,move_none

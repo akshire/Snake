@@ -45,7 +45,7 @@
 
 ; initialize stack pointer
 addi    sp, zero, LEDS
-
+;-----------------------------------------------------------------------------------------
 ; main
 ; arguments
 ;     none
@@ -57,14 +57,20 @@ main:
 	
 	addi t0,zero,1
 	
-	stw HEAD_X,t0
-	stw HEAD_Y, 0
-	stw TAIL_X,zero
-	stw TAIL_Y,zero
-	stw TAIL_X,
+	stw zero, HEAD_X(zero)
+	stw zero, HEAD_Y(zero)
+	stw zero, TAIL_X(zero)
+	stw zero, TAIL_Y(zero)
+	stw zero, TAIL_X(zero)
 
-
+;-----------------------------------------------------------------------------------------
 ; BEGIN: clear_leds
+; arguments
+;     None
+;
+; return values
+;     None
+;
 clear_leds:
 	stw zero, LEDS(zero)
 	stw zero, 0x2004(zero)
@@ -74,6 +80,12 @@ clear_leds:
 
 
 ; BEGIN: set_pixel
+; arguments
+;     a0 <- pixel's x-coordinate
+;	  a1 <- pixel's y-coordinate
+;
+; return values
+;     None
 set_pixel:
 
 	addi t5, zero, 0x0001
@@ -84,47 +96,56 @@ set_pixel:
 	or t5, t5, t7
 	stw t5, LEDS(a0)
 
-	finally: ret
-	
-
+	finally : ret
 ; END: set_pixel
 
+;-----------------------------------------------------------------------------------------
 
 ; BEGIN: display_score
 display_score:
 
 ; END: display_score
 
+;-----------------------------------------------------------------------------------------
 
 ; BEGIN: init_game
 init_game:
 
 ; END: init_game
 
+;-----------------------------------------------------------------------------------------
 
 ; BEGIN: create_food
 create_food:
 
 ; END: create_food
 
+;-----------------------------------------------------------------------------------------
 
 ; BEGIN: hit_test
 hit_test:
 
 ; END: hit_test
 
+;-----------------------------------------------------------------------------------------
 
 ; BEGIN: get_input
+; arguments
+;     none
+;
+; return values
+;     v0 <- Direction of the Head
 get_input:
+	; Getting the Values Buttons and Buttons + 4
 	addi t2, zero, BUTTONS 
 	addi t0, t2, 0x0004
-	
+	; Buttons + 4
 	ldw t1, 0x0000(t0)
 	
-	
+	; checking which Button was pressed with priority to checkpoint
 	addi t3, zero, 0x0010 ; 10000
 	bge t1, t3, case_checkpoint
-	
+	; increase comparing value by shifting
 	srli t3, t3, 0x0001 ; 01000
 	bge t1, t3, case_right
 	
@@ -138,19 +159,21 @@ get_input:
 	bge t1, t3, case_left
 	
 	bge t1, zero, true_case_nothing ; 00000
-	
+
+	; Different cases for the buttons
 	case_checkpoint :
 		addi t4, zero, BUTTON_CHECKPOINT
+		; DONT KNOW WHAT TO DO 
 		add v0,t4,zero
 		jmpi case_nothing
 	
+
 	case_right :
 		addi t4, zero, BUTTON_LEFT
 		beq v0,t4, case_nothing
 		addi t5,zero,BUTTON_RIGHT
 		add v0,t5,zero
 		addi t4, v0, 0
-		
 		jmpi case_nothing
 	
 	
@@ -159,18 +182,16 @@ get_input:
 		beq v0,t4, case_nothing
 		addi t5,zero,BUTTON_DOWN
 		add v0,t5,zero
-		
-		
-		
-		
 		jmpi case_nothing
 	
+
 	case_up :
 		addi t4, zero, BUTTON_DOWN
 		beq v0,t4, case_nothing
 		addi t5,zero,BUTTON_UP
 		add v0,t5,zero
 		jmpi case_nothing
+
 	
 	case_left :
 		addi t4, zero, BUTTON_RIGHT
@@ -178,78 +199,76 @@ get_input:
 		addi t5,zero,BUTTON_LEFT
 		add v0,t5,zero
 		jmpi case_nothing
+
 	
 	case_nothing :
-
 		ldw t6, HEAD_X(zero)
 		ldw t7, HEAD_Y(zero)
-		
 		addi t5, zero, 0
 		; FOR LOOP TO INCREASE
-		forLoop_:
-			beq t5, t6, done_forL
-			addi t5, t5, 1 
+		for_loop_get_input:
+			beq t5, t6, done_for_loop_get_input
+			addi t5, t5, 1
 			slli t4, t4, 8
-			bne t5, t6, forLoop_ ; tant que  t5 != t6 (qui est = x)
-		done_forL:
-		
+			bne t5, t6, for_loop_get_input ; while  t5 != t6 (which is = x)
+		done_for_loop_get_input:
+		; Setting the GSA directions
 		ldw t3, GSA(t6)
-		
 		or t4, t4, t3
-		
 		stw t4, GSA(t6)
 		stw zero, 0x0000(t0)
 
 true_case_nothing:
 		ret
-
 ; END: get_input
 
+;-----------------------------------------------------------------------------------------
 
 ; BEGIN: draw_array
+; arguments
+;     None
+;
+; return values
+;     None
 draw_array:
 
-addi t0, zero, 0
-addi t2, zero, 0 ; x
-addi t3, zero, 0 ; y
-addi t4, zero, 8
-forCooking:
-	
-	
+	addi t0, zero, 0
+	addi t2, zero, 0 ; x
+	addi t3, zero, 0 ; y
+	addi t4, zero, 8
 
-	
-	ldw t1, GSA(t0)
-
-	addi t5, zero, 0x0001
-	slli t6, t2, 3
-	add t6, t6, t3
-	sll t5, t5, t6
-	ldw t7, LEDS(t2)
-	or t5, t5, t7
-	stw t5, LEDS(t2)
-
-	addi t0, t0, 1
-
-	addi t3, t3, 1
-	beq t3, t4, reset_y
-
-	jmpi skip
+	for_loop_draw_array:
+		ldw t1, GSA(t0)
+		addi t5, zero, 0x0001
+		slli t6, t2, 3
+		add t6, t6, t3
+		sll t5, t5, t6
+		ldw t7, LEDS(t2)
+		or t5, t5, t7
+		stw t5, LEDS(t2)
+		addi t0, t0, 1
+		addi t3, t3, 1
+		beq t3, t4, reset_y
+		jmpi skip
 
 	reset_y:
- 
 		addi t3, zero, 0
 		addi t2, zero, 1; increment x
 
 	skip:
-	addi t5, zero, 96
-	bne t1, t5 forCooking
-
-	
-
+		addi t5, zero, 96
+		bne t1, t5, for_loop_draw_array
+		ret
 ; END: draw_array
 
+;-----------------------------------------------------------------------------------------
 
 ; BEGIN: move_snake
+; arguments
+;     a0 <- = 1 if the snake’s head collides with the food, else 0
+;
+; return values
+;     v0 <- Direction of the Head
 move_snake:
 	addi t0,zero,0
 	beq v0,t0,move_none
@@ -266,49 +285,48 @@ move_snake:
 	
 	
 	move_none:
+		jmpi move_tail
 	
+
 	move_left:
-	ldw t1, HEAD_X(zero)
-	addi t2, zero, 1
-	sub t1, t1, t2
-	stw t1, HEAD_X(zero)
-	
-	jmpi move_tail
-	
-	
-	
-	
+		ldw t1, HEAD_X(zero)
+		addi t2, zero, 1
+		sub t1, t1, t2
+		stw t1, HEAD_X(zero)
+		jmpi move_tail
+
 	
 	move_up:
-	ldw t1, HEAD_Y(zero)
-	addi t2, zero, 1
-	sub t1, t1, t2
-	stw t1, HEAD_Y(zero)
-	jmpi move_tail
+		ldw t1, HEAD_Y(zero)
+		addi t2, zero, 1
+		sub t1, t1, t2
+		stw t1, HEAD_Y(zero)
+		jmpi move_tail
 	
+
 	move_down:
-	
-	ldw t1, HEAD_Y(zero)
-	addi t1, t1, 1
-	stw t1, HEAD_Y(zero)
-	jmpi move_tail
+		ldw t1, HEAD_Y(zero)
+		addi t1, t1, 1
+		stw t1, HEAD_Y(zero)
+		jmpi move_tail
 	
 	
 	
 	move_right:
-	ldw t1, HEAD_X(zero)
-	addi t1, t1, 1
-	stw t1, HEAD_X(zero)
-	
-	jmpi move_tail
+		ldw t1, HEAD_X(zero)
+		addi t1, t1, 1
+		stw t1, HEAD_X(zero)
+		jmpi move_tail
+
 
 	move_cp:
-	jmpi move_tail
+		jmpi move_tail
 	
 	
 	move_tail:
+		; Getting the tail coordinates
 		bne a0,zero, tail_does_not_move
-		ldw t2, TAIL_X(zero)
+		ldw t2, TAIL_X(zero)		
 		ldw t1, TAIL_Y(zero)
 		
 		addi t3, zero, 0
@@ -334,53 +352,57 @@ move_snake:
 
 
 
-	move_left_tail:
-		ldw t1, TAIL_X(zero)
-		addi t2, zero, 1
-		sub t1, t1, t2
-		stw t1, TAIL_X(zero)
- 	 jmpi tail_does_not_move
+		move_left_tail:
+			ldw t1, TAIL_X(zero)
+			addi t2, zero, 1
+			sub t1, t1, t2
+			stw t1, TAIL_X(zero)
+ 		 	jmpi tail_does_not_move
 
-	move_right_tail:
-		
-		ldw t1, TAIL_X(zero)
-		addi t1, t1, 1
-		stw t1, TAIL_X(zero)
- 	 jmpi tail_does_not_move
+
+		move_right_tail:
+			ldw t1, TAIL_X(zero)
+			addi t1, t1, 1
+			stw t1, TAIL_X(zero)
+ 		 	jmpi tail_does_not_move
 	
-	move_down_tail:
 
-		ldw t1, TAIL_Y(zero)
-		addi t1, t1, 1
-		stw t1, TAIL_Y(zero)
- 	 jmpi tail_does_not_move
+		move_down_tail:
+			ldw t1, TAIL_Y(zero)
+			addi t1, t1, 1
+			stw t1, TAIL_Y(zero)
+			jmpi tail_does_not_move
 
-	move_up_tail:
-		ldw t1, TAIL_Y(zero)
-		addi t2, zero, 1
-		sub t1, t1, t2
-		stw t1, TAIL_Y(zero)
- 	 jmpi tail_does_not_move
+
+		move_up_tail:
+			ldw t1, TAIL_Y(zero)
+			addi t2, zero, 1
+			sub t1, t1, t2
+			stw t1, TAIL_Y(zero)
+ 			jmpi tail_does_not_move
 	
 			
 	
-	tail_does_not_move:
-	ret
+		tail_does_not_move:
+		ret
 
 ; END: move_snake
 
+;-----------------------------------------------------------------------------------------
 
 ; BEGIN: save_checkpoint
 save_checkpoint:
 
 ; END: save_checkpoint
 
+;-----------------------------------------------------------------------------------------
 
 ; BEGIN: restore_checkpoint
 restore_checkpoint:
 
 ; END: restore_checkpoint
 
+;-----------------------------------------------------------------------------------------
 
 ; BEGIN: blink_score
 blink_score:
