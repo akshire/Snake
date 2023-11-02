@@ -55,13 +55,18 @@ addi    sp, zero, LEDS
 main:
     ; TODO: Finish this procedure.
 	
-	addi t0,zero,1
-	
-	stw zero, HEAD_X(zero)
-	stw zero, HEAD_Y(zero)
-	stw zero, TAIL_X(zero)
-	stw zero, TAIL_Y(zero)
-	stw zero, TAIL_X(zero)
+	addi a0,zero,0
+	addi a1,zero,0 
+	addi t0, zero, BUTTON_RIGHT
+;	stw t0, 0x1014(zero)
+	;call draw_array
+
+	infinite_loop_main:
+		call clear_leds
+		call get_input
+		call move_snake
+		call draw_array
+		jmpi infinite_loop_main
 
 ;-----------------------------------------------------------------------------------------
 ; BEGIN: clear_leds
@@ -137,14 +142,50 @@ hit_test:
 ;     v0 <- Direction of the Head
 get_input:
 	; Getting the Values Buttons and Buttons + 4
-	addi t2, zero, BUTTONS 
-	addi t0, t2, 0x0004
+	addi t0, zero, 0x0004
 	; Buttons + 4
-	ldw t1, 0x0000(t0)
-	
+	ldw t1, BUTTONS(t0)
 	; checking which Button was pressed with priority to checkpoint
 	addi t3, zero, 0x0010 ; 10000
 	bge t1, t3, case_checkpoint
+; ---------------------------------------------------------
+	; Loading the Head_x and Head_y
+		ldw t6, HEAD_X(zero)
+		ldw t7, HEAD_Y(zero)
+		addi t5,zero,0 ; address counter
+		addi t0, zero,0 ; x counter
+		addi t2,zero,0; y counter
+
+		; check if x is equal to 0
+		beq t0,t6,for_loop_get_input_incrementing_with_x_done
+		for_loop_get_input_incrementing_with_x:
+			;increment counter
+			addi t0,t0,1
+			; increment address
+			addi t5,t5,4
+			; check counter
+			bne t0,t6,for_loop_get_input_incrementing_with_x
+		for_loop_get_input_incrementing_with_x_done:
+
+		beq t2,t7,for_loop_get_input_incrementing_with_y_done
+		for_loop_get_input_incrementing_with_y:
+			;increment counter
+			addi t2,t2,1
+			; increment address 4*8, a step of y equals 8 steps of y
+			addi t5,t5,32
+			; check counter
+			bne t2,t7,for_loop_get_input_incrementing_with_y
+		for_loop_get_input_incrementing_with_y_done:
+		; loading the direction
+		ldw t6, GSA(t5); old direction
+
+		
+
+;----------------------------------------------
+
+
+
+
 	; increase comparing value by shifting
 	srli t3, t3, 0x0001 ; 01000
 	bge t1, t3, case_right
@@ -158,67 +199,57 @@ get_input:
 	srli t3, t3, 0x0001 ; 00001
 	bge t1, t3, case_left
 	
-	bge t1, zero, true_case_nothing ; 00000
+	bge t1, zero, case_nothing ; 00000
 
 	; Different cases for the buttons
 	case_checkpoint :
-		addi t4, zero, BUTTON_CHECKPOINT
-		; DONT KNOW WHAT TO DO 
-		add v0,t4,zero
-		jmpi case_nothing
+		addi v0,zero,BUTTON_CHECKPOINT
+		jmpi get_input_done
 	
 
 	case_right :
+		; setting v0
+		addi v0, zero, BUTTON_RIGHT
+		; Check if the old direction(t6 is the old direction) is opposite of pressed
 		addi t4, zero, BUTTON_LEFT
-		beq v0,t4, case_nothing
-		addi t5,zero,BUTTON_RIGHT
-		add v0,t5,zero
-		addi t4, v0, 0
-		jmpi case_nothing
+		beq t6,t4, get_input_done
+		stw v0, GSA(t5)
+		jmpi get_input_done
 	
 	
 	case_down :
+		; setting v0
+		addi v0, zero, BUTTON_DOWN
+		; Check if the old direction(t6 is the old direction) is opposite of pressed
 		addi t4, zero, BUTTON_UP
-		beq v0,t4, case_nothing
-		addi t5,zero,BUTTON_DOWN
-		add v0,t5,zero
-		jmpi case_nothing
+		beq t6,t4, get_input_done
+		stw v0, GSA(t5)
+		jmpi get_input_done
 	
 
 	case_up :
+			; setting v0
+		addi v0, zero, BUTTON_UP
+		; Check if the old direction(t6 is the old direction) is opposite of pressed
 		addi t4, zero, BUTTON_DOWN
-		beq v0,t4, case_nothing
-		addi t5,zero,BUTTON_UP
-		add v0,t5,zero
-		jmpi case_nothing
+		beq t6,t4, get_input_done
+		stw v0, GSA(t5)
+		jmpi get_input_done
 
 	
 	case_left :
+			; setting v0
+		addi v0, zero, BUTTON_LEFT
+		; Check if the old direction(t6 is the old direction) is opposite of pressed
 		addi t4, zero, BUTTON_RIGHT
-		beq v0,t4, case_nothing
-		addi t5,zero,BUTTON_LEFT
-		add v0,t5,zero
-		jmpi case_nothing
+		beq t6,t4, get_input_done
+		stw v0, GSA(t5)
+		jmpi get_input_done
 
 	
 	case_nothing :
-		ldw t6, HEAD_X(zero)
-		ldw t7, HEAD_Y(zero)
-		addi t5, zero, 0
-		; FOR LOOP TO INCREASE
-		for_loop_get_input:
-			beq t5, t6, done_for_loop_get_input
-			addi t5, t5, 1
-			slli t4, t4, 8
-			bne t5, t6, for_loop_get_input ; while  t5 != t6 (which is = x)
-		done_for_loop_get_input:
-		; Setting the GSA directions
-		ldw t3, GSA(t6)
-		or t4, t4, t3
-		stw t4, GSA(t6)
-		stw zero, 0x0000(t0)
-
-true_case_nothing:
+		addi v0, zero, BUTTON_NONE
+get_input_done:
 		ret
 ; END: get_input
 
@@ -238,15 +269,24 @@ draw_array:
 	addi t4, zero, 8
 
 	for_loop_draw_array:
+
+		; a verifier : les x et y dans la loop, et le stw t5 LEDS(t2) 
+		; probablement remplacer ca par mettre les bonnes valeurs a0 et a1 puis call set_pixel
+
+
 		ldw t1, GSA(t0)
 		addi t5, zero, 0x0001
 		slli t6, t2, 3
 		add t6, t6, t3
 		sll t5, t5, t6
-		ldw t7, LEDS(t2)
-		or t5, t5, t7
+		
+		beq t1, zero, dont_draw
+
 		stw t5, LEDS(t2)
-		addi t0, t0, 1
+
+		dont_draw:
+
+		addi t0, t0, 4
 		addi t3, t3, 1
 		beq t3, t4, reset_y
 		jmpi skip
@@ -257,7 +297,7 @@ draw_array:
 
 	skip:
 		addi t5, zero, 96
-		bne t1, t5, for_loop_draw_array
+		bne t0, t5, for_loop_draw_array
 		ret
 ; END: draw_array
 
@@ -270,121 +310,171 @@ draw_array:
 ; return values
 ;     None
 move_snake:
-	addi t0,zero,0
-	beq v0,t0,move_none
-	addi t0,zero,1
-	beq v0,t0,move_left
-	addi t0,zero,2
-	beq v0,t0,move_up
-	addi t0,zero,3
-	beq v0,t0,move_down
-	addi t0,zero,4
-	beq v0,t0,move_right
-	addi t0,zero,5
-	beq v0,t0,move_cp
-	
-	
-	move_none:
-		jmpi move_tail
+	; Loading the Head_x and Head_y
+		ldw t6, HEAD_X(zero)
+		ldw t7, HEAD_Y(zero)
+		addi t5,zero,0 ; address counter
+		addi t0, zero,0 ; x counter
+		addi t2,zero,0; y counter
+
+		; check if x is equal to 0
+		beq t0,t6,for_loop_move_snake_incrementing_with_x_done
+		for_loop_move_snake_incrementing_with_x:
+			;increment counter
+			addi t0,t0,1
+			; increment address
+			addi t5,t5,4
+			; check counter
+			bne t0,t6,for_loop_move_snake_incrementing_with_x
+		for_loop_move_snake_incrementing_with_x_done:
+
+		beq t2,t7,for_loop_move_snake_incrementing_with_y_done
+		for_loop_move_snake_incrementing_with_y:
+			;increment counter
+			addi t2,t2,1
+			; increment address 4*8, a step of y equals 8 steps of y
+			addi t5,t5,32
+			; check counter
+			bne t2,t7,for_loop_move_snake_incrementing_with_y
+		for_loop_move_snake_incrementing_with_y_done:
+		; loading the direction
+		ldw t6, GSA(t5); old direction
+
+
+	addi t0,zero,BUTTON_LEFT
+	beq t6,t0,move_left
+	addi t0,zero,BUTTON_UP
+	beq t6,t0,move_up
+	addi t0,zero,BUTTON_DOWN
+	beq t6,t0,move_down
+	addi t0,zero,BUTTON_RIGHT
+	beq t6,t0,move_right
 	
 
 	move_left:
+		; updating HEAD_X
 		ldw t1, HEAD_X(zero)
 		addi t2, zero, 1
 		sub t1, t1, t2
 		stw t1, HEAD_X(zero)
+		; updating the direction
+		addi t0,zero,32
+		sub t5,t5,t0
+		addi t0,zero,BUTTON_LEFT
+		stw t0, GSA(t5)
 		jmpi move_tail
+
 
 	
 	move_up:
+		; updating HEAD_Y
 		ldw t1, HEAD_Y(zero)
 		addi t2, zero, 1
 		sub t1, t1, t2
 		stw t1, HEAD_Y(zero)
+		; updating the direction
+		addi t0,zero,4
+		sub t5,t5,t0
+		addi t0,zero,BUTTON_UP
+		stw t0, GSA(t5)
 		jmpi move_tail
 	
 
 	move_down:
+		; updating HEAD_Y
 		ldw t1, HEAD_Y(zero)
 		addi t1, t1, 1
 		stw t1, HEAD_Y(zero)
+		; updating direction
+		addi t5,t5,4
+		addi t0,zero,BUTTON_DOWN
+		stw t0, GSA(t5)
 		jmpi move_tail
 	
 	
 	
 	move_right:
+		; updating HEAD_X
 		ldw t1, HEAD_X(zero)
 		addi t1, t1, 1
 		stw t1, HEAD_X(zero)
+		; updating direction
+		addi t5,t5,32
+		addi t0,zero,BUTTON_RIGHT
+		stw t0, GSA(t5)
 		jmpi move_tail
 
-
-	move_cp:
-		jmpi move_tail
 	
 	
 	move_tail:
 		; Getting the tail coordinates
 		bne a0,zero, tail_does_not_move
+
 		ldw t2, TAIL_X(zero)		
 		ldw t1, TAIL_Y(zero)
-		
-		addi t3, zero, 0
 	
-		slli t2, t2, 3
+		slli t1, t1, 2; adress y
+		slli t2,t2,5; address x
+		
 		add t3, t2, t1
 		ldw t4, GSA(t3) ; direction
 
 
-		addi t0,zero,0
-		beq t4,t0,tail_does_not_move
-		addi t0,zero,1
+		
+		addi t0,zero,BUTTON_LEFT
 		beq t4,t0,move_left_tail
-		addi t0,zero,2
+		addi t0,zero,BUTTON_UP
 		beq t4,t0,move_up_tail
-		addi t0,zero,3
+		addi t0,zero,BUTTON_DOWN
 		beq t4,t0,move_down_tail
-		addi t0,zero,4
+		addi t0,zero,BUTTON_RIGHT
 		beq t4,t0,move_right_tail
-		addi t0,zero,5
-		beq t4,t0,tail_does_not_move ; pas sur
-
-
 
 
 		move_left_tail:
+
+		;	stw zero, GSA(t3)
+
 			ldw t1, TAIL_X(zero)
 			addi t2, zero, 1
 			sub t1, t1, t2
 			stw t1, TAIL_X(zero)
- 		 	jmpi tail_does_not_move
+ 		 	jmpi move_tail_done
 
 
 		move_right_tail:
+		;	stw zero, GSA(t3)
+
+
 			ldw t1, TAIL_X(zero)
 			addi t1, t1, 1
 			stw t1, TAIL_X(zero)
- 		 	jmpi tail_does_not_move
+ 		 	jmpi move_tail_done
 	
 
 		move_down_tail:
+		;	stw zero, GSA(t3)
+
 			ldw t1, TAIL_Y(zero)
 			addi t1, t1, 1
 			stw t1, TAIL_Y(zero)
-			jmpi tail_does_not_move
+			jmpi move_tail_done
 
 
 		move_up_tail:
+		;	stw zero, GSA(t3)
+
 			ldw t1, TAIL_Y(zero)
 			addi t2, zero, 1
 			sub t1, t1, t2
 			stw t1, TAIL_Y(zero)
- 			jmpi tail_does_not_move
+ 			jmpi move_tail_done
 	
 			
-	
+		
 		tail_does_not_move:
-		ret
+		move_tail_done:
+			ret
 
 ; END: move_snake
 
