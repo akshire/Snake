@@ -134,6 +134,17 @@ display_score:
 
 ; BEGIN: init_game
 init_game:
+	stw zero, HEAD_X(zero)
+	stw zero, HEAD_Y(zero)
+	stw zero, TAIL_X(zero)
+	stw zero, TAIL_Y(zero)
+	stw zero, SCORE(zero)
+	addi t0, zero, DIR_RIGHT
+	stw t0, GSA(zero)
+
+	init_game_loop_reset_GSA:
+	
+	
 
 ; END: init_game
 
