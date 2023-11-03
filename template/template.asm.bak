@@ -128,6 +128,99 @@ set_pixel:
 ; BEGIN: display_score
 display_score:
 
+	ldw t0, digit_map(zero)
+	stw t0, SEVEN_SEGS(zero)
+	stw t0, SEVEN_SEGS+4(zero)
+	stw t0, SEVEN_SEGS+8(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+
+	ldw t1, SCORE(zero)
+	addi t3, zero, 0
+
+	addi t2, zero, 9
+	
+	bge t2, t1, unit
+
+	addi t1, t1, -10
+	addi t3, t3, 10 ; tenth
+
+unit:
+
+	beq t1, t2, UNIT_NINE ;t2 = 9
+	addi t2, t2, -1
+	beq t1, t2, UNIT_EIGHT ;t2 = 8
+	addi t2, t2, -1
+	beq t1, t2, UNIT_SEVEN ;t2 = 7
+	addi t2, t2, -1
+	beq t1, t2, UNIT_SIX ;t2 = 6
+	addi t2, t2, -1
+	beq t1, t2, UNIT_FIVE ;t2 = 5
+	addi t2, t2, -1
+	beq t1, t2, UNIT_FOUR ;t2 = 4
+	addi t2, t2, -1
+	beq t1, t2, UNIT_THREE ;t2 = 3
+	addi t2, t2, -1
+	beq t1, t2, UNIT_TWO ;t2 = 2
+	addi t2, t2, -1
+	beq t1, t2, UNIT_ONE ;t2 = 1
+	
+	jmpi UNIT_ZERO
+
+UNIT_NINE:
+	ldw t0, digit_map+36(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+jmpi TENTH
+
+UNIT_EIGHT:
+	ldw t0, digit_map+32(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+jmpi TENTH
+UNIT_SEVEN:
+	ldw t0, digit_map+28(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+jmpi TENTH
+
+UNIT_SIX:
+	ldw t0, digit_map+24(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+jmpi TENTH
+
+UNIT_FIVE:
+	ldw t0, digit_map+20(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+jmpi TENTH
+
+UNIT_FOUR:
+	ldw t0, digit_map+16(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+jmpi TENTH
+
+UNIT_THREE:
+	ldw t0, digit_map+12(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+jmpi TENTH
+
+UNIT_TWO:
+	ldw t0, digit_map+8(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+jmpi TENTH
+ 
+UNIT_ONE:
+	ldw t0, digit_map+4(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+jmpi TENTH
+
+UNIT_ZERO: ;already done before the loop but just in case
+	ldw t0, digit_map+8(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+jmpi TENTH
+ 
+ 
+
+TENTH:
+
+
+
 ; END: display_score
 
 ;-----------------------------------------------------------------------------------------
@@ -632,3 +725,16 @@ restore_checkpoint:
 blink_score:
 
 ; END: blink_score
+
+
+digit_map:
+.word 0xFC ; 0
+.word 0x60 ; 1
+.word 0xDA ; 2
+.word 0xF2 ; 3
+.word 0x66 ; 4
+.word 0xB6 ; 5
+.word 0xBE ; 6
+.word 0xE0 ; 7
+.word 0xFE ; 8
+.word 0xF6 ; 9
