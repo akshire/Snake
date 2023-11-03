@@ -57,9 +57,15 @@ main:
 	
 	addi a0,zero,0
 	addi a1,zero,0 
-	addi t0, zero, BUTTON_RIGHT
-;	stw t0, 0x1014(zero)
-	;call draw_array
+	addi t0, zero, BUTTON_DOWN
+	stw t0, 0x1014(zero)
+	
+
+	stw zero, HEAD_X(zero)
+	stw zero, HEAD_Y(zero)
+	stw zero, TAIL_X(zero)
+	stw zero, TAIL_Y(zero)
+	call draw_array
 
 	infinite_loop_main:
 		call clear_leds
@@ -266,7 +272,7 @@ draw_array:
 	addi t0, zero, 0
 	addi t2, zero, 0 ; x
 	addi t3, zero, 0 ; y
-	addi t4, zero, 8
+	addi t4, zero, 7
 
 	for_loop_draw_array:
 
@@ -281,8 +287,37 @@ draw_array:
 		sll t5, t5, t6
 		
 		beq t1, zero, dont_draw
+		
+		add a0, zero, t2 ;x
+		add a1, zero, t3 ;y
+	
+		addi sp, sp, -36
+		stw t0, 0(sp)
+		stw t1, 4(sp)
+		stw t2, 8(sp)
+		stw t3, 12(sp)
+		stw t4, 16(sp)
+		stw t5, 20(sp)
+		stw t6, 24(sp)
+		stw t7, 28(sp)
+		stw ra, 32(sp)
+		
+		call set_pixel
 
-		stw t5, LEDS(t2)
+		
+		ldw t0, 0(sp)
+		ldw t1, 4(sp)
+		ldw t2, 8(sp)
+		ldw t3, 12(sp)
+		ldw t4, 16(sp)
+		ldw t5, 20(sp)
+		ldw t6, 24(sp)
+		ldw t7, 28(sp)
+		ldw ra, 32(sp)
+
+		addi sp, sp, 36
+
+		
 
 		dont_draw:
 
@@ -296,7 +331,7 @@ draw_array:
 		addi t2, zero, 1; increment x
 
 	skip:
-		addi t5, zero, 96
+		addi t5, zero, 32
 		bne t0, t5, for_loop_draw_array
 		ret
 ; END: draw_array
@@ -305,7 +340,7 @@ draw_array:
 
 ; BEGIN: move_snake
 ; arguments
-;     a0 <- = 1 if the snake’s head collides with the food, else 0
+;     a0 <- = 1 if the snakeï¿½s head collides with the food, else 0
 ;
 ; return values
 ;     None
@@ -433,7 +468,7 @@ move_snake:
 
 		move_left_tail:
 
-		;	stw zero, GSA(t3)
+			stw zero, GSA(t3)
 
 			ldw t1, TAIL_X(zero)
 			addi t2, zero, 1
@@ -443,7 +478,7 @@ move_snake:
 
 
 		move_right_tail:
-		;	stw zero, GSA(t3)
+			stw zero, GSA(t3)
 
 
 			ldw t1, TAIL_X(zero)
@@ -453,7 +488,7 @@ move_snake:
 	
 
 		move_down_tail:
-		;	stw zero, GSA(t3)
+			stw zero, GSA(t3)
 
 			ldw t1, TAIL_Y(zero)
 			addi t1, t1, 1
@@ -462,7 +497,7 @@ move_snake:
 
 
 		move_up_tail:
-		;	stw zero, GSA(t3)
+			stw zero, GSA(t3)
 
 			ldw t1, TAIL_Y(zero)
 			addi t2, zero, 1
