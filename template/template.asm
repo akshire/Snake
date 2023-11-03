@@ -55,7 +55,8 @@ addi    sp, zero, LEDS
 main:
     ; TODO: Finish this procedure.
 	
-	addi a0,zero,0
+	jmpi dont_do_test_ex3
+    addi a0,zero,0
 	addi a1,zero,0 
 	addi t0, zero, BUTTON_DOWN
 	stw t0, 0x1014(zero)
@@ -73,6 +74,18 @@ main:
 		call move_snake
 		call draw_array
 		jmpi infinite_loop_main
+
+dont_do_test_ex3:
+
+;	jmpi dont_do_test_ex4
+	
+	call clear_leds
+
+	call create_food
+
+	call draw_array
+
+;dont_do test_ex4:
 
 ;-----------------------------------------------------------------------------------------
 ; BEGIN: clear_leds
@@ -133,10 +146,12 @@ create_food:
 		ldw t0, RANDOM_NUM(zero)
 		; isolate the first byte
 		andi t1, t0, 0xFF
-		; compare if value > 96
+		; compare if value > 384 = 96*4
 		addi t2, zero, 96
 		bge t1,t2,search_valid_position_create_food
 		; loading the GSA location
+
+		slli t1, t1, 2
 		ldw t3, GSA(t1)
 
 		addi t4, zero, 1
@@ -149,8 +164,10 @@ create_food:
 		beq t3,t4, search_valid_position_create_food
 
 		addi t5 , zero, 5
+		
 		stw t5, GSA(t1)
 
+ret
 ; END: create_food
 
 ;-----------------------------------------------------------------------------------------
@@ -327,7 +344,7 @@ draw_array:
 		addi t2, zero, 1; increment x
 
 	skip:
-		addi t5, zero, 32
+		addi t5, zero, 384 ;384
 		bne t0, t5, for_loop_draw_array
 		ret
 ; END: draw_array
