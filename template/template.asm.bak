@@ -142,7 +142,8 @@ display_score:
 	bge t2, t1, unit
 
 	addi t1, t1, -10
-	addi t3, t3, 10 ; tenth
+	addi t3, t3, 10 ; tenth 
+
 
 unit:
 
