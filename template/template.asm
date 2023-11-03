@@ -181,38 +181,12 @@ get_input:
 		ldw t6, HEAD_X(zero)
 		ldw t7, HEAD_Y(zero)
 		addi t5,zero,0 ; address counter
-		addi t0, zero,0 ; x counter
-		addi t2,zero,0; y counter
-
-		; check if x is equal to 0
-		beq t0,t6,for_loop_get_input_incrementing_with_x_done
-		for_loop_get_input_incrementing_with_x:
-			;increment counter
-			addi t0,t0,1
-			; increment address
-			addi t5,t5,4
-			; check counter
-			bne t0,t6,for_loop_get_input_incrementing_with_x
-		for_loop_get_input_incrementing_with_x_done:
-
-		beq t2,t7,for_loop_get_input_incrementing_with_y_done
-		for_loop_get_input_incrementing_with_y:
-			;increment counter
-			addi t2,t2,1
-			; increment address 4*8, a step of y equals 8 steps of y
-			addi t5,t5,32
-			; check counter
-			bne t2,t7,for_loop_get_input_incrementing_with_y
-		for_loop_get_input_incrementing_with_y_done:
+		slli t0, t6,5 ; x in address
+		slli t2,t7,2; y counter
+		add t5, t0, t2
 		; loading the direction
 		ldw t6, GSA(t5); old direction
-
-		
-
 ;----------------------------------------------
-
-
-
 
 	; increase comparing value by shifting
 	srli t3, t3, 0x0001 ; 01000
@@ -371,30 +345,11 @@ move_snake:
 		ldw t6, HEAD_X(zero)
 		ldw t7, HEAD_Y(zero)
 		addi t5,zero,0 ; address counter
-		addi t0, zero,0 ; x counter
-		addi t2,zero,0; y counter
+		slli t0, t6,5 ; x counter
+		slli t2,t7,2; y counter
+		add t5, t0,t2
 
-		; check if x is equal to 0
-		beq t0,t6,for_loop_move_snake_incrementing_with_x_done
-		for_loop_move_snake_incrementing_with_x:
-			;increment counter
-			addi t0,t0,1
-			; increment address
-			addi t5,t5,4
-			; check counter
-			bne t0,t6,for_loop_move_snake_incrementing_with_x
-		for_loop_move_snake_incrementing_with_x_done:
-
-		beq t2,t7,for_loop_move_snake_incrementing_with_y_done
-		for_loop_move_snake_incrementing_with_y:
-			;increment counter
-			addi t2,t2,1
-			; increment address 4*8, a step of y equals 8 steps of y
-			addi t5,t5,32
-			; check counter
-			bne t2,t7,for_loop_move_snake_incrementing_with_y
-		for_loop_move_snake_incrementing_with_y_done:
-		; loading the direction
+	
 		ldw t6, GSA(t5); old direction
 
 
