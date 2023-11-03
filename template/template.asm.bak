@@ -58,7 +58,7 @@ main:
 	jmpi dont_do_test_ex3
     addi a0,zero,0
 	addi a1,zero,0 
-	addi t0, zero, BUTTON_DOWN
+	addi t0, zero, DIR_DOWN
 	stw t0, 0x1014(zero)
 	
 
@@ -146,8 +146,8 @@ create_food:
 		ldw t0, RANDOM_NUM(zero)
 		; isolate the first byte
 		andi t1, t0, 0xFF
-		; compare if value > 384 = 96*4
-		addi t2, zero, 96
+		; compare if value > 96
+		addi t2, zero, NB_CELLS
 		bge t1,t2,search_valid_position_create_food
 		; loading the GSA location
 
@@ -184,13 +184,13 @@ hit_test:
 	ldw t5,GSA(t4) ; direction
 	
 
-	addi t2, zero, BUTTON_LEFT
+	addi t2, zero, DIR_LEFT
 	beq t5,t1,hit_test_left
-	addi t2, zero, BUTTON_UP
+	addi t2, zero, DIR_UP
 	beq t5,t1,hit_test_up
-	addi t2, zero, BUTTON_DOWN
+	addi t2, zero, DIR_DOWN
 	beq t5,t1,hit_test_down
-	addi t2, zero, BUTTON_RIGHT
+	addi t2, zero, DIR_RIGHT
 	beq t5,t1,hit_test_right
 
 
@@ -222,9 +222,10 @@ hit_test:
 		beq t2,t6,hit_test_hit_snake
 		addi t6, t6,1
 		beq t2,t6,hit_test_hit_food
+		jmpi hit_test_no_collision
 	hit_test_down:
 		addi t7, zero, 7
-		beq t1,7,hit_test_hit_screen_boundary
+		beq t1,t7,hit_test_hit_screen_boundary
 		addi t4,t4,4
 		ldw t2,GSA(t4) ; what is on the left
 		addi t6, zero,1
@@ -237,6 +238,7 @@ hit_test:
 		beq t2,t6,hit_test_hit_snake
 		addi t6, t6,1
 		beq t2,t6,hit_test_hit_food
+		jmpi hit_test_no_collision
 	hit_test_right:
 		addi t7, zero, 11
 		beq t0,t7,hit_test_hit_screen_boundary
@@ -252,6 +254,16 @@ hit_test:
 		beq t2,t6,hit_test_hit_snake
 		addi t6, t6,1
 		beq t2,t6,hit_test_hit_food
+		jmpi hit_test_no_collision
+	hit_test_hit_screen_boundary:
+		addi v0, zero, 2
+	hit_test_hit_snake:
+		addi v0,zero, 2
+	hit_test_hit_food:
+		addi v0,zero,1
+	hit_test_no_collision:
+		addi v0, zero,0
+	
 ; END: hit_test
 
 ;-----------------------------------------------------------------------------------------
@@ -447,13 +459,13 @@ move_snake:
 		ldw t6, GSA(t5); old direction
 
 
-	addi t0,zero,BUTTON_LEFT
+	addi t0,zero,DIR_LEFT
 	beq t6,t0,move_left
-	addi t0,zero,BUTTON_UP
+	addi t0,zero,DIR_UP
 	beq t6,t0,move_up
-	addi t0,zero,BUTTON_DOWN
+	addi t0,zero,DIR_DOWN
 	beq t6,t0,move_down
-	addi t0,zero,BUTTON_RIGHT
+	addi t0,zero,DIR_RIGHT
 	beq t6,t0,move_right
 	
 
@@ -466,7 +478,7 @@ move_snake:
 		; updating the direction
 		addi t0,zero,32
 		sub t5,t5,t0
-		addi t0,zero,BUTTON_LEFT
+		addi t0,zero,DIR_LEFT
 		stw t0, GSA(t5)
 		jmpi move_tail
 
@@ -481,7 +493,7 @@ move_snake:
 		; updating the direction
 		addi t0,zero,4
 		sub t5,t5,t0
-		addi t0,zero,BUTTON_UP
+		addi t0,zero,DIR_UP
 		stw t0, GSA(t5)
 		jmpi move_tail
 	
@@ -493,7 +505,7 @@ move_snake:
 		stw t1, HEAD_Y(zero)
 		; updating direction
 		addi t5,t5,4
-		addi t0,zero,BUTTON_DOWN
+		addi t0,zero,DIR_DOWN
 		stw t0, GSA(t5)
 		jmpi move_tail
 	
@@ -506,7 +518,7 @@ move_snake:
 		stw t1, HEAD_X(zero)
 		; updating direction
 		addi t5,t5,32
-		addi t0,zero,BUTTON_RIGHT
+		addi t0,zero,DIR_RIGHT
 		stw t0, GSA(t5)
 		jmpi move_tail
 
@@ -527,13 +539,13 @@ move_snake:
 
 
 		
-		addi t0,zero,BUTTON_LEFT
+		addi t0,zero,DIR_LEFT
 		beq t4,t0,move_left_tail
-		addi t0,zero,BUTTON_UP
+		addi t0,zero,DIR_UP
 		beq t4,t0,move_up_tail
-		addi t0,zero,BUTTON_DOWN
+		addi t0,zero,DIR_DOWN
 		beq t4,t0,move_down_tail
-		addi t0,zero,BUTTON_RIGHT
+		addi t0,zero,DIR_RIGHT
 		beq t4,t0,move_right_tail
 
 

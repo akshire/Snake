@@ -256,13 +256,18 @@ hit_test:
 		beq t2,t6,hit_test_hit_food
 		jmpi hit_test_no_collision
 	hit_test_hit_screen_boundary:
-		addi v0, zero, 2
+		addi v0,zero, 2
+		jmpi hit_test_done
 	hit_test_hit_snake:
 		addi v0,zero, 2
+		jmpi hit_test_done
 	hit_test_hit_food:
-		addi v0,zero,1
+		addi v0,zero, 1
+		jmpi hit_test_done
 	hit_test_no_collision:
-		addi v0, zero,0
+		addi v0,zero, 0
+	hit_test_done:
+		ret
 	
 ; END: hit_test
 
