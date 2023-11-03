@@ -122,6 +122,28 @@ init_game:
 
 ; BEGIN: create_food
 create_food:
+	search_valid_position_create_food:
+		; search in the stack
+		ldw t0, RANDOM_NUM(zero)
+		; isolate the first byte
+		andi t1, t0, 0xFF
+		; compare if value > 96
+		addi t2, zero, 96
+		bge t1,t2,search_valid_position_create_food
+		; loading the GSA location
+		ldw t3, GSA(t1)
+
+		addi t4, zero, 1
+		beq t3,t4, search_valid_position_create_food
+		addi t4, t4, 1
+		beq t3,t4, search_valid_position_create_food
+		addi t4, t4, 1
+		beq t3,t4, search_valid_position_create_food
+		addi t4, t4, 1
+		beq t3,t4, search_valid_position_create_food
+
+		addi t5 , zero, 5
+		stw t5, GSA(t1)
 
 ; END: create_food
 
