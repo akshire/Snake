@@ -154,8 +154,12 @@ call hit_test
 	call move_snake
 	call draw_array	
 
+jmpi loop_gecko_basic
+
 end_test_gecko_basic:
 call blink_score
+
+
 
 break
 

@@ -154,8 +154,14 @@ call hit_test
 	call move_snake
 	call draw_array	
 
+bne v0, t0, loop_gecko_basic
+
 end_test_gecko_basic:
-ret
+call blink_score
+
+
+
+break
 
 wait_main:
 
