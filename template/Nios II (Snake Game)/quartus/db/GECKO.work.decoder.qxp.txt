@@ -1,0 +1,41 @@
+Copyright (C) 2023  Intel Corporation. All rights reserved.
+Your use of Intel Corporation's design tools, logic functions 
+and other software and tools, and any partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Intel Program License 
+Subscription Agreement, the Intel Quartus Prime License Agreement,
+the Intel FPGA IP License Agreement, or other applicable license
+agreement, including, without limitation, that your use is for
+the sole purpose of programming logic devices manufactured by
+Intel and sold by Intel or its authorized distributors.  Please
+refer to the applicable agreement for further details, at
+https://fpgasoftware.intel.com/eula.
+
++----------------------------------------------------------------------------+
+; Quartus Prime QXP Design File                                              ;
++------------------+---------------------------------------------------------+
+; Field            ; Value                                                   ;
++------------------+---------------------------------------------------------+
+; Entity           ; decoder                                                 ;
+; Case Sensitive   ;                                                         ;
+; QXP Source       ; decoder-decoder_0.qxp                                   ;
+; Software Version ; Version 16.0.0 Build 211 04/27/2016 SJ Standard Edition ;
+; Date             ; Mon Oct 16 17:05:41 2017                                ;
+; Contents         ; Netlist Only                                            ;
+; Family           ; EP4CE30F23C8                                            ;
+; Device           ; CYCLONEIVE3_V1F484C8                                    ;
++------------------+---------------------------------------------------------+
+
++--------------------------------------------+
+; Boundary Ports                             ;
++----------------+--------+------------------+
+; Port Name      ; Type   ; Default Value    ;
++----------------+--------+------------------+
+; address [15:0] ; input  ; 0000000000000000 ;
+; cs_Buttons     ; output ; 0                ;
+; cs_LEDS        ; output ; 0                ;
+; cs_RAM         ; output ; 0                ;
+; cs_ROM         ; output ; 0                ;
++----------------+--------+------------------+
