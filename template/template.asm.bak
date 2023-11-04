@@ -446,7 +446,7 @@ hit_test:
 	hit_test_up:
 		beq t1,zero,hit_test_hit_screen_boundary
 		addi t4,t4,-4
-		ldw t2,GSA(t4) ; what is on the left
+		ldw t2,GSA(t4) ; what is on the top
 		addi t6, zero,1
 		beq t2,t6,hit_test_hit_snake
 		addi t6, t6,1
@@ -462,7 +462,7 @@ hit_test:
 		addi t7, zero, 7
 		beq t1,t7,hit_test_hit_screen_boundary
 		addi t4,t4,4
-		ldw t2,GSA(t4) ; what is on the left
+		ldw t2,GSA(t4) ; what is on the bottom
 		addi t6, zero,1
 		beq t2,t6,hit_test_hit_snake
 		addi t6, t6,1
@@ -478,7 +478,7 @@ hit_test:
 		addi t7, zero, 11
 		beq t0,t7,hit_test_hit_screen_boundary
 		addi t4,t4,-32
-		ldw t2,GSA(t4) ; what is on the left
+		ldw t2,GSA(t4) ; what is on the right
 		addi t6, zero,1
 		beq t2,t6,hit_test_hit_snake
 		addi t6, t6,1
