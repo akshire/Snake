@@ -266,6 +266,27 @@ TENTH:
 
 ; BEGIN: init_game
 init_game:
+	stw zero, HEAD_X(zero)
+	stw zero, HEAD_Y(zero)
+	stw zero, TAIL_X(zero)
+	stw zero, TAIL_Y(zero)
+	stw zero, SCORE(zero)
+	addi t0, zero, DIR_RIGHT
+	stw t0, GSA(zero)
+	
+	addi t1, zero, 0
+	addi t2, zero, 95
+	init_game_loop_reset_GSA:
+	addi t1,t1,1
+	slli t3,t1,2
+	stw zero, GSA(t3)
+	bne t1, t2, init_game_loop_reset_GSA
+	
+	call create_food
+	call draw_array
+
+	ret
+	
 
 ; END: init_game
 
