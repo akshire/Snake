@@ -57,6 +57,11 @@ start:
 call clear_leds
 
 addi t0, zero, 10000
+wait_procedure_5:
+addi t0,t0,-1
+bne t0,zero,wait_procedure_5
+
+addi t0, zero, 10000
 wait_procedure:
 addi t0,t0,-1
 bne t0,zero,wait_procedure
@@ -76,6 +81,16 @@ addi t0, zero, 10000
 wait_procedure_2:
 addi t0,t0,-1
 bne t0,zero,wait_procedure_2
+
+addi t0, zero, 10000
+wait_procedure_3:
+addi t0,t0,-1
+bne t0,zero,wait_procedure_3
+
+addi t0, zero, 10000
+wait_procedure_4:
+addi t0,t0,-1
+bne t0,zero,wait_procedure_4
 
 jmpi start
 
@@ -571,6 +586,7 @@ draw_array:
 		ldw t7, 28(sp)
 		ldw ra, 32(sp)
 		addi sp, sp, 36
+		
 
 	dont_draw:
 		addi t0, t0, 1
@@ -579,9 +595,9 @@ draw_array:
 		jmpi skip
 
 	reset_y:
-		addi t3, zero, 0
-		addi t2, zero, 1; increment x
-		addi t0, t0,1
+		addi t3, zero, 0 ; increment y
+		addi t2, t2, 1; increment x
+		
 
 	skip:
 		addi t5, zero, NB_CELLS ;96
