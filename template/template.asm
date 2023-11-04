@@ -89,10 +89,12 @@ dont_do_test_ex4:
 
 
 ;jmpi dont_do_test_ex5
-
-	call clear_leds
+	
 
 	loop_test_ex5:
+	call clear_leds
+	call create_food
+	call draw_array
 	call get_input
 
 	call hit_test
@@ -107,7 +109,7 @@ dont_do_test_ex4:
 
 	goto_create_food:
 	call create_food
-	jmpi end_test_ex5
+	
 
 
 	goto_no_collision:
@@ -121,9 +123,11 @@ dont_do_test_ex4:
 
 
 end_test_ex5:
+
 break
 
 ;dont_do_test_ex5
+
 
 ;-----------------------------------------------------------------------------------------
 ; BEGIN: clear_leds
@@ -177,10 +181,14 @@ display_score:
 
 	addi t2, zero, 9
 	
+
+	loop_display_score:
 	bge t2, t1, unit
 
 	addi t1, t1, -10
 	addi t3, t3, 10 ; tenth 
+	jmpi loop_display_score
+
 
 
 unit:
@@ -207,7 +215,7 @@ unit:
 
 UNIT_NINE:
 	ldw t0, digit_map+36(zero)
-	stw t0, SEVEN_SEGS+12(zero)
+	stw t0, SEVEN_SEGS+12(zero); SEVEN_SEGS[3]
 jmpi TENTH
 
 UNIT_EIGHT:
@@ -258,6 +266,80 @@ jmpi TENTH
 
 TENTH:
 
+	beq t3, t2, TENTH_NINE ;t2 = 9
+	addi t2, t2, -1
+	beq t3, t2, TENTH_EIGHT ;t2 = 8
+	addi t2, t2, -1
+	beq t3, t2, TENTH_SEVEN ;t2 = 7
+	addi t2, t2, -1
+	beq t3, t2, TENTH_SIX ;t2 = 6
+	addi t2, t2, -1
+	beq t3, t2, TENTH_FIVE ;t2 = 5
+	addi t2, t2, -1
+	beq t3, t2, TENTH_FOUR ;t2 = 4
+	addi t2, t2, -1
+	beq t3, t2, TENTH_THREE ;t2 = 3
+	addi t2, t2, -1
+	beq t3, t2, TENTH_TWO ;t2 = 2
+	addi t2, t2, -1
+	beq t3, t2, TENTH_ONE ;t2 = 1
+	
+	jmpi TENTH_ZERO
+
+
+TENTH_NINE:
+	ldw t0, digit_map+36(zero)
+	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
+jmpi end_display_score
+
+TENTH_EIGHT:
+	ldw t0, digit_map+32(zero)
+	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
+jmpi end_display_score
+
+TENTH_SEVEN:
+	ldw t0, digit_map+28(zero)
+	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
+jmpi end_display_score
+
+TENTH_SIX:
+	ldw t0, digit_map+24(zero)
+	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
+jmpi end_display_score
+
+TENTH_FIVE:
+	ldw t0, digit_map+20(zero)
+	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
+jmpi end_display_score
+
+TENTH_FOUR:
+	ldw t0, digit_map+16(zero)
+	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
+jmpi end_display_score
+
+TENTH_THREE:
+	ldw t0, digit_map+12(zero)
+	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
+jmpi end_display_score
+
+TENTH_TWO:
+	ldw t0, digit_map+8(zero)
+	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
+jmpi end_display_score
+
+TENTH_ONE:
+	ldw t0, digit_map+4(zero)
+	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
+jmpi end_display_score
+
+TENTH_ZERO: ;again probably useless
+	ldw t0, digit_map(zero)
+	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
+jmpi end_display_score
+
+end_display_score:
+
+ret
 
 
 ; END: display_score
@@ -591,7 +673,7 @@ draw_array:
 		addi t2, zero, 1; increment x
 
 	skip:
-		addi t5, zero, 16 ;384
+		addi t5, zero, 24 ;384
 		bne t0, t5, for_loop_draw_array
 		ret
 ; END: draw_array
