@@ -477,7 +477,7 @@ hit_test:
 	hit_test_right:
 		addi t7, zero, 11
 		beq t0,t7,hit_test_hit_screen_boundary
-		addi t4,t4,-32
+		addi t4,t4,32
 		ldw t2,GSA(t4) ; what is on the right
 		addi t6, zero,1
 		beq t2,t6,hit_test_hit_snake

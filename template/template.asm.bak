@@ -138,9 +138,9 @@ break
 ;     None
 ;
 clear_leds:
-	stw zero, LEDS(zero)
-	stw zero, 0x2004(zero)
-	stw zero, 0x2008(zero)
+	stw zero, LEDS+0(zero)
+	stw zero, LEDS+4(zero)
+	stw zero, LEDS+8(zero)
 	ret
 ; END: clear_leds
 
