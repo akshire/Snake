@@ -53,130 +53,36 @@ addi    sp, zero, LEDS
 ; return values
 ;     This procedure should never return.
 main:
-    ; TODO: Finish this procedure.
-	
-	jmpi dont_do_test_ex3
-    addi a0,zero,0
-	addi a1,zero,0 
-	addi t0, zero, DIR_DOWN
-	stw t0, 0x1014(zero)
-	
+start:
+call clear_leds
 
-	stw zero, HEAD_X(zero)
-	stw zero, HEAD_Y(zero)
-	stw zero, TAIL_X(zero)
-	stw zero, TAIL_Y(zero)
-	call draw_array
+addi t0, zero, 10000
+wait_procedure:
+addi t0,t0,-1
+bne t0,zero,wait_procedure
 
-	infinite_loop_main:
-		call clear_leds
-		call get_input
-		call move_snake
-		call draw_array
-		jmpi infinite_loop_main
+addi t0,zero,0
+addi t1,zero,96
+addi t2, zero,1
 
-dont_do_test_ex3:
+for_loop_gsa:
+	slli t3,t0,2
+	stw t2,GSA(t3)
+	addi t0,t0,1
+	bne t1,t0,for_loop_gsa
+call draw_array
 
-	jmpi dont_do_test_ex4
-	
-	call clear_leds
+addi t0, zero, 10000
+wait_procedure_2:
+addi t0,t0,-1
+bne t0,zero,wait_procedure_2
 
-	call create_food
-
-	call draw_array
-
-dont_do_test_ex4:
-
-
-jmpi dont_do_test_ex5
-	
-
-	loop_test_ex5:
-	call clear_leds
-	call create_food
-	call draw_array
-	call get_input
-
-	call hit_test
-	addi t0, zero, 1
-	beq v0, t0, goto_create_food ;t0 = 1
-
-	addi t0, t0, 1
-
-	beq v0, t0, end_test_ex5 ;t0 = 2
-
-	beq v0, zero, goto_no_collision
-
-	goto_create_food:
-	call create_food
-	
-
-
-	goto_no_collision:
-	
-	call move_snake
-	call draw_array	
-
-	jmpi loop_test_ex5
+jmpi start
 
 
 
-
-end_test_ex5:
-
-break
-
-dont_do_test_ex5:
-
-; jmpi test_gecko_basic_snake
-
-call init_game
-
-loop_gecko_basic:
-call wait_main
-
-call get_input
-call hit_test
-	addi t0, zero, 1
-	beq v0, t0, goto_create_food_gecko ;t0 = 1
-
-	addi t0, t0, 1
-
-	beq v0, t0, end_test_gecko_basic ;t0 = 2
-
-	beq v0, zero, goto_no_collision_gecko
-
-	goto_create_food_gecko:
-	call create_food
-	
-	goto_no_collision_gecko:
-	
-	call move_snake
-	call draw_array	
-
-bne v0, t0, loop_gecko_basic
-
-end_test_gecko_basic:
-call blink_score
-
-
-
-break
-
-wait_main:
-
-	addi t7, zero,-1
-	addi t6, zero, 1000
-
-	loop_wait_main:
-	addi t7, t7, 1
-	bne t7, t6, loop_wait_main
 
 ret
-
-;test_gecko_basic_snake
-
-
 ;-----------------------------------------------------------------------------------------
 ; BEGIN: clear_leds
 ; arguments
@@ -191,8 +97,7 @@ clear_leds:
 	stw zero, LEDS+8(zero)
 	ret
 ; END: clear_leds
-
-
+;-----------------------------------------------------------------------------------------
 ; BEGIN: set_pixel
 ; arguments
 ;     a0 <- pixel's x-coordinate
@@ -212,39 +117,30 @@ set_pixel:
 
 	finally : ret
 ; END: set_pixel
-
 ;-----------------------------------------------------------------------------------------
-
 ; BEGIN: display_score
 display_score:
 
 	ldw t0, digit_map(zero)
 	stw t0, SEVEN_SEGS(zero)
 	stw t0, SEVEN_SEGS+4(zero)
-
 	ldw t1, SCORE(zero)
 	bne t1, zero, NOT_ZERO
 	stw t0, SEVEN_SEGS+8(zero)
 	stw t0, SEVEN_SEGS+12(zero)
 	jmpi end_display_score
+
 	NOT_ZERO:
-
 	addi t3, zero, 0 ;TENTH
-
 	addi t2, zero, 9
 	
-
 	loop_display_score:
 	bge t2, t1, unit
-
 	addi t1, t1, -10
 	addi t3, t3, 10 ; tenth 
 	jmpi loop_display_score
 
-
-
 unit:
-
 	beq t1, t2, UNIT_NINE ;t2 = 9
 	addi t2, t2, -1
 	beq t1, t2, UNIT_EIGHT ;t2 = 8
@@ -262,7 +158,6 @@ unit:
 	beq t1, t2, UNIT_TWO ;t2 = 2
 	addi t2, t2, -1
 	beq t1, t2, UNIT_ONE ;t2 = 1
-	
 	jmpi UNIT_ZERO
 
 UNIT_NINE:
@@ -274,6 +169,7 @@ UNIT_EIGHT:
 	ldw t0, digit_map+32(zero)
 	stw t0, SEVEN_SEGS+12(zero)
 jmpi TENTH
+
 UNIT_SEVEN:
 	ldw t0, digit_map+28(zero)
 	stw t0, SEVEN_SEGS+12(zero)
@@ -314,8 +210,6 @@ UNIT_ZERO: ;already done before the loop but just in case
 	stw t0, SEVEN_SEGS+12(zero)
 jmpi TENTH
  
- 
-
 TENTH:
 	addi t2, zero, 90
 	beq t3, t2, TENTH_NINE ;t2 = 90
@@ -335,9 +229,7 @@ TENTH:
 	beq t3, t2, TENTH_TWO ;t2 = 20
 	addi t2, t2, -10
 	beq t3, t2, TENTH_ONE ;t2 = 10
-	
 	jmpi TENTH_ZERO
-
 
 TENTH_NINE:
 	ldw t0, digit_map+36(zero)
@@ -390,18 +282,12 @@ TENTH_ZERO: ;again probably useless
 jmpi end_display_score
 
 end_display_score:
-
 ret
-
-
 ; END: display_score
-
 ;-----------------------------------------------------------------------------------------
-
 ; BEGIN: init_game
 init_game:
 	call clear_leds
-
 	stw zero, HEAD_X(zero)
 	stw zero, HEAD_Y(zero)
 	stw zero, TAIL_X(zero)
@@ -409,27 +295,20 @@ init_game:
 	stw zero, SCORE(zero)
 	addi t0, zero, DIR_RIGHT
 	stw t0, GSA(zero)
-
 	call display_score
-	
 	addi t1, zero, 0
 	addi t2, zero, 95
+
 	init_game_loop_reset_GSA:
 	addi t1,t1,1
 	slli t3,t1,2
 	stw zero, GSA(t3)
 	bne t1, t2, init_game_loop_reset_GSA
-	
 	call create_food
 	call draw_array
-
 	ret
-	
-
 ; END: init_game
-
 ;-----------------------------------------------------------------------------------------
-
 ; BEGIN: create_food
 create_food:
 	search_valid_position_create_food:
@@ -441,10 +320,9 @@ create_food:
 		addi t2, zero, NB_CELLS
 		bge t1,t2,search_valid_position_create_food
 		; loading the GSA location
-
 		slli t1, t1, 2
 		ldw t3, GSA(t1)
-
+		; comparisons
 		addi t4, zero, 1
 		beq t3,t4, search_valid_position_create_food
 		addi t4, t4, 1
@@ -453,16 +331,12 @@ create_food:
 		beq t3,t4, search_valid_position_create_food
 		addi t4, t4, 1
 		beq t3,t4, search_valid_position_create_food
-
+		; storing the food in the position
 		addi t5 , zero, 5
-		
 		stw t5, GSA(t1)
-
-ret
+		ret
 ; END: create_food
-
 ;-----------------------------------------------------------------------------------------
-
 ; BEGIN: hit_test
 hit_test:
 	; getting the address of the head in GSA
@@ -473,8 +347,7 @@ hit_test:
 	; getting the direction
 	add t4,t2,t3 ; address in the GSA
 	ldw t5,GSA(t4) ; direction
-	
-
+	; searching where we re gonna move
 	addi t2, zero, DIR_LEFT
 	beq t5,t2,hit_test_left
 	addi t2, zero, DIR_UP
@@ -483,7 +356,6 @@ hit_test:
 	beq t5,t2,hit_test_down
 	addi t2, zero, DIR_RIGHT
 	beq t5,t2,hit_test_right
-
 
 	hit_test_left:
 		beq t0,zero,hit_test_hit_screen_boundary
@@ -499,6 +371,7 @@ hit_test:
 		beq t2,t6,hit_test_hit_snake
 		addi t6, t6,1
 		beq t2,t6,hit_test_hit_food
+
 	hit_test_up:
 		beq t1,zero,hit_test_hit_screen_boundary
 		addi t4,t4,-4
@@ -514,6 +387,7 @@ hit_test:
 		addi t6, t6,1
 		beq t2,t6,hit_test_hit_food
 		jmpi hit_test_no_collision
+
 	hit_test_down:
 		addi t7, zero, 7
 		beq t1,t7,hit_test_hit_screen_boundary
@@ -530,6 +404,7 @@ hit_test:
 		addi t6, t6,1
 		beq t2,t6,hit_test_hit_food
 		jmpi hit_test_no_collision
+
 	hit_test_right:
 		addi t7, zero, 11
 		beq t0,t7,hit_test_hit_screen_boundary
@@ -546,25 +421,27 @@ hit_test:
 		addi t6, t6,1
 		beq t2,t6,hit_test_hit_food
 		jmpi hit_test_no_collision
+
 	hit_test_hit_screen_boundary:
 		addi v0,zero, 2
 		jmpi hit_test_done
+
 	hit_test_hit_snake:
 		addi v0,zero, 2
 		jmpi hit_test_done
+
 	hit_test_hit_food:
 		addi v0,zero, 1
 		addi a0, zero, 1
 		jmpi hit_test_done
+
 	hit_test_no_collision:
 		addi v0,zero, 0
+
 	hit_test_done:
 		ret
-	
 ; END: hit_test
-
 ;-----------------------------------------------------------------------------------------
-
 ; BEGIN: get_input
 ; arguments
 ;     none
@@ -594,16 +471,12 @@ get_input:
 	; increase comparing value by shifting
 	srli t3, t3, 0x0001 ; 01000
 	bge t1, t3, case_right
-	
 	srli t3, t3, 0x0001 ; 00100
 	bge t1, t3, case_down
-	
 	srli t3, t3, 0x0001 ; 00010
 	bge t1, t3, case_up
-	
 	srli t3, t3, 0x0001 ; 00001
 	bge t1, t3, case_left
-	
 	bge t1, zero, case_nothing ; 00000
 
 	; Different cases for the buttons
@@ -611,7 +484,6 @@ get_input:
 		addi v0,zero,BUTTON_CHECKPOINT
 		jmpi get_input_done
 	
-
 	case_right :
 		; setting v0
 		addi v0, zero, BUTTON_RIGHT
@@ -620,7 +492,6 @@ get_input:
 		beq t6,t4, get_input_done
 		stw v0, GSA(t5)
 		jmpi get_input_done
-	
 	
 	case_down :
 		; setting v0
@@ -631,9 +502,8 @@ get_input:
 		stw v0, GSA(t5)
 		jmpi get_input_done
 	
-
 	case_up :
-			; setting v0
+		; setting v0
 		addi v0, zero, BUTTON_UP
 		; Check if the old direction(t6 is the old direction) is opposite of pressed
 		addi t4, zero, BUTTON_DOWN
@@ -641,7 +511,6 @@ get_input:
 		stw v0, GSA(t5)
 		jmpi get_input_done
 
-	
 	case_left :
 			; setting v0
 		addi v0, zero, BUTTON_LEFT
@@ -651,15 +520,13 @@ get_input:
 		stw v0, GSA(t5)
 		jmpi get_input_done
 
-	
 	case_nothing :
 		addi v0, zero, BUTTON_NONE
+
 get_input_done:
 		ret
 ; END: get_input
-
 ;-----------------------------------------------------------------------------------------
-
 ; BEGIN: draw_array
 ; arguments
 ;     None
@@ -668,24 +535,19 @@ get_input_done:
 ;     None
 draw_array:
 
-	addi t0, zero, 0
+	addi t0, zero, 0 ; total counter
 	addi t2, zero, 0 ; x
 	addi t3, zero, 0 ; y
-	addi t4, zero, 7
+	addi t4, zero, NB_ROWS
 
 	for_loop_draw_array:
-
-		ldw t1, GSA(t0)
-		addi t5, zero, 0x0001
-		slli t6, t2, 3
-		add t6, t6, t3
-		sll t5, t5, t6
-		
+		slli t5,t0,2
+		ldw t1, GSA(t5)
 		beq t1, zero, dont_draw
-		
+
 		add a0, zero, t2 ;x
 		add a1, zero, t3 ;y
-	
+
 		addi sp, sp, -36
 		stw t0, 0(sp)
 		stw t1, 4(sp)
@@ -696,10 +558,9 @@ draw_array:
 		stw t6, 24(sp)
 		stw t7, 28(sp)
 		stw ra, 32(sp)
-		
+
 		call set_pixel
 
-		
 		ldw t0, 0(sp)
 		ldw t1, 4(sp)
 		ldw t2, 8(sp)
@@ -709,30 +570,25 @@ draw_array:
 		ldw t6, 24(sp)
 		ldw t7, 28(sp)
 		ldw ra, 32(sp)
-
 		addi sp, sp, 36
 
-		
-
-		dont_draw:
-
-		addi t0, t0, 4
+	dont_draw:
+		addi t0, t0, 1
 		addi t3, t3, 1
 		beq t3, t4, reset_y
 		jmpi skip
 
 	reset_y:
-		addi t3, zero, -1
+		addi t3, zero, 0
 		addi t2, zero, 1; increment x
+		addi t0, t0,1
 
 	skip:
-		addi t5, zero, 24 ;384
+		addi t5, zero, NB_CELLS ;96
 		bne t0, t5, for_loop_draw_array
-		ret
+	ret
 ; END: draw_array
-
 ;-----------------------------------------------------------------------------------------
-
 ; BEGIN: move_snake
 ; arguments
 ;     a0 <- = 1 if the snake�s head collides with the food, else 0
@@ -747,11 +603,8 @@ move_snake:
 		slli t0, t6,5 ; x counter
 		slli t2,t7,2; y counter
 		add t5, t0,t2
-
-	
 		ldw t6, GSA(t5); old direction
-
-
+	; searching for the good direction
 	addi t0,zero,DIR_LEFT
 	beq t6,t0,move_left
 	addi t0,zero,DIR_UP
@@ -761,7 +614,6 @@ move_snake:
 	addi t0,zero,DIR_RIGHT
 	beq t6,t0,move_right
 	
-
 	move_left:
 		; updating HEAD_X
 		ldw t1, HEAD_X(zero)
@@ -775,8 +627,6 @@ move_snake:
 		stw t0, GSA(t5)
 		jmpi move_tail
 
-
-	
 	move_up:
 		; updating HEAD_Y
 		ldw t1, HEAD_Y(zero)
@@ -790,7 +640,6 @@ move_snake:
 		stw t0, GSA(t5)
 		jmpi move_tail
 	
-
 	move_down:
 		; updating HEAD_Y
 		ldw t1, HEAD_Y(zero)
@@ -801,8 +650,6 @@ move_snake:
 		addi t0,zero,DIR_DOWN
 		stw t0, GSA(t5)
 		jmpi move_tail
-	
-	
 	
 	move_right:
 		; updating HEAD_X
@@ -819,19 +666,14 @@ move_snake:
 	
 	move_tail:
 		; Getting the tail coordinates
-		bne a0,zero, tail_does_not_move
-
+		bne a0,zero, move_tail_done
 		ldw t2, TAIL_X(zero)		
 		ldw t1, TAIL_Y(zero)
-	
 		slli t1, t1, 2; adress y
 		slli t2,t2,5; address x
-		
 		add t3, t2, t1
 		ldw t4, GSA(t3) ; direction
-
-
-		
+		; check for direction
 		addi t0,zero,DIR_LEFT
 		beq t4,t0,move_left_tail
 		addi t0,zero,DIR_UP
@@ -841,125 +683,82 @@ move_snake:
 		addi t0,zero,DIR_RIGHT
 		beq t4,t0,move_right_tail
 
-
 		move_left_tail:
-
 			stw zero, GSA(t3)
-
 			ldw t1, TAIL_X(zero)
 			addi t2, zero, 1
 			sub t1, t1, t2
 			stw t1, TAIL_X(zero)
  		 	jmpi move_tail_done
 
-
 		move_right_tail:
 			stw zero, GSA(t3)
-
-
 			ldw t1, TAIL_X(zero)
 			addi t1, t1, 1
 			stw t1, TAIL_X(zero)
  		 	jmpi move_tail_done
 	
-
 		move_down_tail:
 			stw zero, GSA(t3)
-
 			ldw t1, TAIL_Y(zero)
 			addi t1, t1, 1
 			stw t1, TAIL_Y(zero)
 			jmpi move_tail_done
 
-
 		move_up_tail:
 			stw zero, GSA(t3)
-
 			ldw t1, TAIL_Y(zero)
 			addi t2, zero, 1
 			sub t1, t1, t2
 			stw t1, TAIL_Y(zero)
  			jmpi move_tail_done
 	
-			
-		
-		tail_does_not_move:
 		move_tail_done:
 			ret
 
 ; END: move_snake
-
 ;-----------------------------------------------------------------------------------------
-
 ; BEGIN: save_checkpoint
 save_checkpoint:
 
 ; END: save_checkpoint
-
 ;-----------------------------------------------------------------------------------------
 
 ; BEGIN: restore_checkpoint
 restore_checkpoint:
 
 ; END: restore_checkpoint
-
 ;-----------------------------------------------------------------------------------------
-
 ; BEGIN: blink_score
 blink_score:
-
 	ldw t0, SEVEN_SEGS(zero)
 	ldw t1, SEVEN_SEGS+4(zero)
 	ldw t2, SEVEN_SEGS+8(zero)
 	ldw t3, SEVEN_SEGS+12(zero)
-
 	addi t4, zero, 0
 	addi t5, zero, 50
 
 	Loop_blink:
-
 	stw zero, SEVEN_SEGS(zero)
 	stw zero, SEVEN_SEGS+4(zero)
 	stw zero, SEVEN_SEGS+8(zero)
 	stw zero, SEVEN_SEGS+12(zero)
-
 	call wait_blink_score
-	
-	
 	stw t0, SEVEN_SEGS(zero)
 	stw t1, SEVEN_SEGS+4(zero)
 	stw t2, SEVEN_SEGS+8(zero)
 	stw t3, SEVEN_SEGS+12(zero)
-
 	addi t4, t4, 1
-
 	bne t4, t5, Loop_blink
-
 ret
-	
-
 wait_blink_score:
-
 	addi t7, zero,-1
 	addi t6, zero, 1000
-
 	loop_wait:
 	addi t7, t7, 1
 	bne t7, t6, loop_wait
-
 ret
-
 ; END: blink_score
-
-
-
-
-
-
-
-
-
-
 digit_map:
 .word 0xFC ; 0
 .word 0x60 ; 1
