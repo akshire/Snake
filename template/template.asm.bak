@@ -88,7 +88,7 @@ dont_do_test_ex3:
 dont_do_test_ex4:
 
 
-;jmpi dont_do_test_ex5
+jmpi dont_do_test_ex5
 	
 
 	loop_test_ex5:
@@ -126,7 +126,49 @@ end_test_ex5:
 
 break
 
-;dont_do_test_ex5
+dont_do_test_ex5:
+
+; jmpi test_gecko_basic_snake
+
+call init_game
+
+loop_gecko_basic:
+call wait_main
+
+call get_input
+call hit_test
+	addi t0, zero, 1
+	beq v0, t0, goto_create_food_gecko ;t0 = 1
+
+	addi t0, t0, 1
+
+	beq v0, t0, end_test_gecko_basic ;t0 = 2
+
+	beq v0, zero, goto_no_collision_gecko
+
+	goto_create_food_gecko:
+	call create_food
+	
+	goto_no_collision_gecko:
+	
+	call move_snake
+	call draw_array	
+
+end_test_gecko_basic:
+ret
+
+wait_main:
+
+	addi t7, zero,-1
+	addi t6, zero, 1000
+
+	loop_wait_main:
+	addi t7, t7, 1
+	bne t7, t6, loop_wait_main
+
+ret
+
+;test_gecko_basic_snake
 
 
 ;-----------------------------------------------------------------------------------------
@@ -173,11 +215,15 @@ display_score:
 	ldw t0, digit_map(zero)
 	stw t0, SEVEN_SEGS(zero)
 	stw t0, SEVEN_SEGS+4(zero)
-	stw t0, SEVEN_SEGS+8(zero)
-	stw t0, SEVEN_SEGS+12(zero)
 
 	ldw t1, SCORE(zero)
-	addi t3, zero, 0
+	bne t1, zero, NOT_ZERO
+	stw t0, SEVEN_SEGS+8(zero)
+	stw t0, SEVEN_SEGS+12(zero)
+	jmpi end_display_score
+	NOT_ZERO:
+
+	addi t3, zero, 0 ;TENTH
 
 	addi t2, zero, 9
 	
@@ -258,31 +304,31 @@ UNIT_ONE:
 jmpi TENTH
 
 UNIT_ZERO: ;already done before the loop but just in case
-	ldw t0, digit_map+8(zero)
+	ldw t0, digit_map(zero)
 	stw t0, SEVEN_SEGS+12(zero)
 jmpi TENTH
  
  
 
 TENTH:
-
-	beq t3, t2, TENTH_NINE ;t2 = 9
-	addi t2, t2, -1
-	beq t3, t2, TENTH_EIGHT ;t2 = 8
-	addi t2, t2, -1
-	beq t3, t2, TENTH_SEVEN ;t2 = 7
-	addi t2, t2, -1
-	beq t3, t2, TENTH_SIX ;t2 = 6
-	addi t2, t2, -1
-	beq t3, t2, TENTH_FIVE ;t2 = 5
-	addi t2, t2, -1
-	beq t3, t2, TENTH_FOUR ;t2 = 4
-	addi t2, t2, -1
-	beq t3, t2, TENTH_THREE ;t2 = 3
-	addi t2, t2, -1
-	beq t3, t2, TENTH_TWO ;t2 = 2
-	addi t2, t2, -1
-	beq t3, t2, TENTH_ONE ;t2 = 1
+	addi t2, zero, 90
+	beq t3, t2, TENTH_NINE ;t2 = 90
+	addi t2, t2, -10
+	beq t3, t2, TENTH_EIGHT ;t2 = 80
+	addi t2, t2, -10
+	beq t3, t2, TENTH_SEVEN ;t2 = 70
+	addi t2, t2, -10
+	beq t3, t2, TENTH_SIX ;t2 = 60
+	addi t2, t2, -10
+	beq t3, t2, TENTH_FIVE ;t2 = 50
+	addi t2, t2, -10
+	beq t3, t2, TENTH_FOUR ;t2 = 40
+	addi t2, t2, -10
+	beq t3, t2, TENTH_THREE ;t2 = 30
+	addi t2, t2, -10
+	beq t3, t2, TENTH_TWO ;t2 = 20
+	addi t2, t2, -10
+	beq t3, t2, TENTH_ONE ;t2 = 10
 	
 	jmpi TENTH_ZERO
 
@@ -348,6 +394,8 @@ ret
 
 ; BEGIN: init_game
 init_game:
+	call clear_leds
+
 	stw zero, HEAD_X(zero)
 	stw zero, HEAD_Y(zero)
 	stw zero, TAIL_X(zero)
@@ -355,6 +403,8 @@ init_game:
 	stw zero, SCORE(zero)
 	addi t0, zero, DIR_RIGHT
 	stw t0, GSA(zero)
+
+	call display_score
 	
 	addi t1, zero, 0
 	addi t2, zero, 95
@@ -477,7 +527,7 @@ hit_test:
 	hit_test_right:
 		addi t7, zero, 11
 		beq t0,t7,hit_test_hit_screen_boundary
-		addi t4,t4,-32
+		addi t4,t4,32
 		ldw t2,GSA(t4) ; what is on the right
 		addi t6, zero,1
 		beq t2,t6,hit_test_hit_snake
@@ -498,6 +548,7 @@ hit_test:
 		jmpi hit_test_done
 	hit_test_hit_food:
 		addi v0,zero, 1
+		addi a0, zero, 1
 		jmpi hit_test_done
 	hit_test_no_collision:
 		addi v0,zero, 0
@@ -617,10 +668,6 @@ draw_array:
 	addi t4, zero, 7
 
 	for_loop_draw_array:
-
-		; a verifier : les x et y dans la loop, et le stw t5 LEDS(t2) 
-		; probablement remplacer ca par mettre les bonnes valeurs a0 et a1 puis call set_pixel
-
 
 		ldw t1, GSA(t0)
 		addi t5, zero, 0x0001
@@ -855,7 +902,56 @@ restore_checkpoint:
 ; BEGIN: blink_score
 blink_score:
 
+	ldw t0, SEVEN_SEGS(zero)
+	ldw t1, SEVEN_SEGS+4(zero)
+	ldw t2, SEVEN_SEGS+8(zero)
+	ldw t3, SEVEN_SEGS+12(zero)
+
+	addi t4, zero, 0
+	addi t5, zero, 50
+
+	Loop_blink:
+
+	stw zero, SEVEN_SEGS(zero)
+	stw zero, SEVEN_SEGS+4(zero)
+	stw zero, SEVEN_SEGS+8(zero)
+	stw zero, SEVEN_SEGS+12(zero)
+
+	call wait_blink_score
+	
+	
+	stw t0, SEVEN_SEGS(zero)
+	stw t1, SEVEN_SEGS+4(zero)
+	stw t2, SEVEN_SEGS+8(zero)
+	stw t3, SEVEN_SEGS+12(zero)
+
+	addi t4, t4, 1
+
+	bne t4, t5, Loop_blink
+
+ret
+	
+
+wait_blink_score:
+
+	addi t7, zero,-1
+	addi t6, zero, 1000
+
+	loop_wait:
+	addi t7, t7, 1
+	bne t7, t6, loop_wait
+
+ret
+
 ; END: blink_score
+
+
+
+
+
+
+
+
 
 
 digit_map:
