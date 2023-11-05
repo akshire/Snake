@@ -1,949 +1,1025 @@
-;	set game state memory location
-.equ    HEAD_X,         0x1000  ; Snake head's position on x
-.equ    HEAD_Y,         0x1004  ; Snake head's position on y
-.equ    TAIL_X,         0x1008  ; Snake tail's position on x
-.equ    TAIL_Y,         0x100C  ; Snake tail's position on Y
-.equ    SCORE,          0x1010  ; Score address
-.equ    GSA,            0x1014  ; Game state array address
-
-.equ    CP_VALID,       0x1200  ; Whether the checkpoint is valid.
-.equ    CP_HEAD_X,      0x1204  ; Snake head's X coordinate. (Checkpoint)
-.equ    CP_HEAD_Y,      0x1208  ; Snake head's Y coordinate. (Checkpoint)
-.equ    CP_TAIL_X,      0x120C  ; Snake tail's X coordinate. (Checkpoint)
-.equ    CP_TAIL_Y,      0x1210  ; Snake tail's Y coordinate. (Checkpoint)
-.equ    CP_SCORE,       0x1214  ; Score. (Checkpoint)
-.equ    CP_GSA,         0x1218  ; GSA. (Checkpoint)
-
-.equ    LEDS,           0x2000  ; LED address
-.equ    SEVEN_SEGS,     0x1198  ; 7-segment display addresses
-.equ    RANDOM_NUM,     0x2010  ; Random number generator address
-.equ    BUTTONS,        0x2030  ; Buttons addresses
-
-; button state
-.equ    BUTTON_NONE,    0
-.equ    BUTTON_LEFT,    1
-.equ    BUTTON_UP,      2
-.equ    BUTTON_DOWN,    3
-.equ    BUTTON_RIGHT,   4
-.equ    BUTTON_CHECKPOINT,    5
-
-; array state
-.equ    DIR_LEFT,       1       ; leftward direction
-.equ    DIR_UP,         2       ; upward direction
-.equ    DIR_DOWN,       3       ; downward direction
-.equ    DIR_RIGHT,      4       ; rightward direction
-.equ    FOOD,           5       ; food
-
-; constants
-.equ    NB_ROWS,        8       ; number of rows
-.equ    NB_COLS,        12      ; number of columns
-.equ    NB_CELLS,       96      ; number of cells in GSA
-.equ    RET_ATE_FOOD,   1       ; return value for hit_test when food was eaten
-.equ    RET_COLLISION,  2       ; return value for hit_test when a collision was detected
-.equ    ARG_HUNGRY,     0       ; a0 argument for move_snake when food wasn't eaten
-.equ    ARG_FED,        1       ; a0 argument for move_snake when food was eaten
-
-; initialize stack pointer
-addi    sp, zero, LEDS
-;-----------------------------------------------------------------------------------------
-; main
-; arguments
-;     none
-;
-; return values
-;     This procedure should never return.
-main:
-
-
-call init_game
-start:
-call wait_main
-call get_input
-call hit_test
-
-
-beq v0, zero,main_case_no_hit
-addi t0,zero,1
-beq v0,t0, main_case_hit_food
-addi t0,zero,2
-beq v0,t0,main_case_end_game
-
-
-main_case_no_hit:
-	addi a0,zero,0
-	jmpi next_step_main
-	
-main_case_hit_food:
-	addi a0, zero,1
-	ldw t0, SCORE(zero)
-	addi t0,t0,1
-	stw t0, SCORE(zero)
-	call save_checkpoint
-	call display_score
-	call create_food
-	jmpi next_step_main
-
-main_case_end_game:
-	call wait_main
-	jmpi main
-
-next_step_main:
-call move_snake
-call clear_leds
-call draw_array
-
-jmpi start
-
-wait_main:
-	addi t0, zero, 0
-	addi t1, zero, 5000
-	addi t2, zero, 0
-	wait_procedure_1:
-	addi t0,t0,1
-	
-	addi t2,zero,0
-	wait_procedure_2:
-	addi t2,t2,1
-	bne t2,t1,wait_procedure_2
-	
-	addi t0,t0,1
-	bne t0,t1,wait_procedure_1
-	ret
-;-----------------------------------------------------------------------------------------
-; BEGIN: clear_leds
-; arguments
-;     None
-;
-; return values
-;     None
-;
-clear_leds:
-	stw zero, LEDS+0(zero)
-	stw zero, LEDS+4(zero)
-	stw zero, LEDS+8(zero)
-	ret
-; END: clear_leds
-;-----------------------------------------------------------------------------------------
-; BEGIN: set_pixel
-; arguments
-;     a0 <- pixel's x-coordinate
-;	  a1 <- pixel's y-coordinate
-;
-; return values
-;     None
-set_pixel:
-
-	addi t5, zero, 0x0001
-	slli t6, a0, 3
-	add t6, t6, a1
-	sll t5, t5, t6
-	ldw t7, 0x2000(a0)
-	or t5, t5, t7
-	stw t5, LEDS(a0)
-
-	finally : ret
-; END: set_pixel
-;-----------------------------------------------------------------------------------------
-; BEGIN: display_score
-display_score:
-
-	ldw t0, digit_map(zero)
-	stw t0, SEVEN_SEGS(zero)
-	stw t0, SEVEN_SEGS+4(zero)
-	ldw t1, SCORE(zero)
-	bne t1, zero, NOT_ZERO
-	stw t0, SEVEN_SEGS+8(zero)
-	stw t0, SEVEN_SEGS+12(zero)
-	jmpi end_display_score
-
-	NOT_ZERO:
-	addi t3, zero, 0 ;TENTH
-	addi t2, zero, 9
-	
-	loop_display_score:
-	bge t2, t1, unit
-	addi t1, t1, -10
-	addi t3, t3, 10 ; tenth 
-	jmpi loop_display_score
-
-unit:
-	beq t1, t2, UNIT_NINE ;t2 = 9
-	addi t2, t2, -1
-	beq t1, t2, UNIT_EIGHT ;t2 = 8
-	addi t2, t2, -1
-	beq t1, t2, UNIT_SEVEN ;t2 = 7
-	addi t2, t2, -1
-	beq t1, t2, UNIT_SIX ;t2 = 6
-	addi t2, t2, -1
-	beq t1, t2, UNIT_FIVE ;t2 = 5
-	addi t2, t2, -1
-	beq t1, t2, UNIT_FOUR ;t2 = 4
-	addi t2, t2, -1
-	beq t1, t2, UNIT_THREE ;t2 = 3
-	addi t2, t2, -1
-	beq t1, t2, UNIT_TWO ;t2 = 2
-	addi t2, t2, -1
-	beq t1, t2, UNIT_ONE ;t2 = 1
-	jmpi UNIT_ZERO
-
-UNIT_NINE:
-	ldw t0, digit_map+36(zero)
-	stw t0, SEVEN_SEGS+12(zero); SEVEN_SEGS[3]
-jmpi TENTH
-
-UNIT_EIGHT:
-	ldw t0, digit_map+32(zero)
-	stw t0, SEVEN_SEGS+12(zero)
-jmpi TENTH
-
-UNIT_SEVEN:
-	ldw t0, digit_map+28(zero)
-	stw t0, SEVEN_SEGS+12(zero)
-jmpi TENTH
-
-UNIT_SIX:
-	ldw t0, digit_map+24(zero)
-	stw t0, SEVEN_SEGS+12(zero)
-jmpi TENTH
-
-UNIT_FIVE:
-	ldw t0, digit_map+20(zero)
-	stw t0, SEVEN_SEGS+12(zero)
-jmpi TENTH
-
-UNIT_FOUR:
-	ldw t0, digit_map+16(zero)
-	stw t0, SEVEN_SEGS+12(zero)
-jmpi TENTH
-
-UNIT_THREE:
-	ldw t0, digit_map+12(zero)
-	stw t0, SEVEN_SEGS+12(zero)
-jmpi TENTH
-
-UNIT_TWO:
-	ldw t0, digit_map+8(zero)
-	stw t0, SEVEN_SEGS+12(zero)
-jmpi TENTH
- 
-UNIT_ONE:
-	ldw t0, digit_map+4(zero)
-	stw t0, SEVEN_SEGS+12(zero)
-jmpi TENTH
-
-UNIT_ZERO: ;already done before the loop but just in case
-	ldw t0, digit_map(zero)
-	stw t0, SEVEN_SEGS+12(zero)
-jmpi TENTH
- 
-TENTH:
-	addi t2, zero, 90
-	beq t3, t2, TENTH_NINE ;t2 = 90
-	addi t2, t2, -10
-	beq t3, t2, TENTH_EIGHT ;t2 = 80
-	addi t2, t2, -10
-	beq t3, t2, TENTH_SEVEN ;t2 = 70
-	addi t2, t2, -10
-	beq t3, t2, TENTH_SIX ;t2 = 60
-	addi t2, t2, -10
-	beq t3, t2, TENTH_FIVE ;t2 = 50
-	addi t2, t2, -10
-	beq t3, t2, TENTH_FOUR ;t2 = 40
-	addi t2, t2, -10
-	beq t3, t2, TENTH_THREE ;t2 = 30
-	addi t2, t2, -10
-	beq t3, t2, TENTH_TWO ;t2 = 20
-	addi t2, t2, -10
-	beq t3, t2, TENTH_ONE ;t2 = 10
-	jmpi TENTH_ZERO
-
-TENTH_NINE:
-	ldw t0, digit_map+36(zero)
-	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
-jmpi end_display_score
-
-TENTH_EIGHT:
-	ldw t0, digit_map+32(zero)
-	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
-jmpi end_display_score
-
-TENTH_SEVEN:
-	ldw t0, digit_map+28(zero)
-	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
-jmpi end_display_score
-
-TENTH_SIX:
-	ldw t0, digit_map+24(zero)
-	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
-jmpi end_display_score
-
-TENTH_FIVE:
-	ldw t0, digit_map+20(zero)
-	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
-jmpi end_display_score
-
-TENTH_FOUR:
-	ldw t0, digit_map+16(zero)
-	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
-jmpi end_display_score
-
-TENTH_THREE:
-	ldw t0, digit_map+12(zero)
-	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
-jmpi end_display_score
-
-TENTH_TWO:
-	ldw t0, digit_map+8(zero)
-	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
-jmpi end_display_score
-
-TENTH_ONE:
-	ldw t0, digit_map+4(zero)
-	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
-jmpi end_display_score
-
-TENTH_ZERO: ;again probably useless
-	ldw t0, digit_map(zero)
-	stw t0, SEVEN_SEGS+8(zero) ;SEVEN_SEGS[2]
-jmpi end_display_score
-
-end_display_score:
-ret
-; END: display_score
-;-----------------------------------------------------------------------------------------
-; BEGIN: init_game
-init_game:
-	addi sp, sp, -4
-	stw ra, 0(sp)
-	call clear_leds
-	ldw ra, 0(sp)
-	addi sp, sp, 4
-	stw zero, HEAD_X(zero)
-	stw zero, HEAD_Y(zero)
-	stw zero, TAIL_X(zero)
-	stw zero, TAIL_Y(zero)
-	stw zero, SCORE(zero)
-	addi t0, zero, DIR_RIGHT
-	stw t0, GSA(zero)
-
-	addi sp, sp, -36
-		stw t0, 0(sp)
-		stw t1, 4(sp)
-		stw t2, 8(sp)
-		stw t3, 12(sp)
-		stw t4, 16(sp)
-		stw t5, 20(sp)
-		stw t6, 24(sp)
-		stw t7, 28(sp)
-		stw ra, 32(sp)
-
-		call display_score
-
-		ldw t0, 0(sp)
-		ldw t1, 4(sp)
-		ldw t2, 8(sp)
-		ldw t3, 12(sp)
-		ldw t4, 16(sp)
-		ldw t5, 20(sp)
-		ldw t6, 24(sp)
-		ldw t7, 28(sp)
-		ldw ra, 32(sp)
-		addi sp, sp, 36
-
-	addi t1, zero, 0
-	addi t2, zero, 95
-
-	init_game_loop_reset_GSA:
-	addi t1,t1,1
-	slli t3,t1,2
-	stw zero, GSA(t3)
-	bne t1, t2, init_game_loop_reset_GSA
-	addi sp, sp, -36
-		stw t0, 0(sp)
-		stw t1, 4(sp)
-		stw t2, 8(sp)
-		stw t3, 12(sp)
-		stw t4, 16(sp)
-		stw t5, 20(sp)
-		stw t6, 24(sp)
-		stw t7, 28(sp)
-		stw ra, 32(sp)
-
-		call create_food
-		call draw_array
-
-		ldw t0, 0(sp)
-		ldw t1, 4(sp)
-		ldw t2, 8(sp)
-		ldw t3, 12(sp)
-		ldw t4, 16(sp)
-		ldw t5, 20(sp)
-		ldw t6, 24(sp)
-		ldw t7, 28(sp)
-		ldw ra, 32(sp)
-		addi sp, sp, 36
-	ret
-; END: init_game
-;-----------------------------------------------------------------------------------------
-; BEGIN: create_food
-create_food:
-	search_valid_position_create_food:
-		; search in the stack
-		ldw t0, RANDOM_NUM(zero)
-		; isolate the first byte
-		andi t1, t0, 0xFF
-		; compare if value > 96
-		addi t2, zero, NB_CELLS
-		bge t1,t2,search_valid_position_create_food
-		; loading the GSA location
-		slli t1, t1, 2
-		ldw t3, GSA(t1)
-		; comparisons
-		addi t4, zero, 1
-		beq t3,t4, search_valid_position_create_food
-		addi t4, t4, 1
-		beq t3,t4, search_valid_position_create_food
-		addi t4, t4, 1
-		beq t3,t4, search_valid_position_create_food
-		addi t4, t4, 1
-		beq t3,t4, search_valid_position_create_food
-		; storing the food in the position
-		addi t5 , zero, 5
-		stw t5, GSA(t1)
-		ret
-; END: create_food
-;-----------------------------------------------------------------------------------------
-; BEGIN: hit_test
-hit_test:
-	; getting the address of the head in GSA
-	ldw t0, HEAD_X(zero)
-	ldw t1, HEAD_Y(zero)
-	slli t2,t0,5
-	slli t3,t1,2
-	; getting the direction
-	add t4,t2,t3 ; address in the GSA
-	ldw t5,GSA(t4) ; direction
-	; searching where we re gonna move
-	addi t2, zero, DIR_LEFT
-	beq t5,t2,hit_test_left
-	addi t2, zero, DIR_UP
-	beq t5,t2,hit_test_up
-	addi t2, zero, DIR_DOWN
-	beq t5,t2,hit_test_down
-	addi t2, zero, DIR_RIGHT
-	beq t5,t2,hit_test_right
-
-	hit_test_left:
-		beq t0,zero,hit_test_hit_screen_boundary
-		addi t4,t4,-32
-		ldw t2,GSA(t4) ; what is on the left
-		addi t6, zero,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_food
-
-	hit_test_up:
-		beq t1,zero,hit_test_hit_screen_boundary
-		addi t4,t4,-4
-		ldw t2,GSA(t4) ; what is on the top
-		addi t6, zero,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_food
-		jmpi hit_test_no_collision
-
-	hit_test_down:
-		addi t7, zero, 7
-		beq t1,t7,hit_test_hit_screen_boundary
-		addi t4,t4,4
-		ldw t2,GSA(t4) ; what is on the bottom
-		addi t6, zero,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_food
-		jmpi hit_test_no_collision
-
-	hit_test_right:
-		addi t7, zero, 11
-		beq t0,t7,hit_test_hit_screen_boundary
-		addi t4,t4,32
-		ldw t2,GSA(t4) ; what is on the right
-		addi t6, zero,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_snake
-		addi t6, t6,1
-		beq t2,t6,hit_test_hit_food
-		jmpi hit_test_no_collision
-
-	hit_test_hit_screen_boundary:
-		addi v0,zero, 2
-		jmpi hit_test_done
-
-	hit_test_hit_snake:
-		addi v0,zero, 2
-		jmpi hit_test_done
-
-	hit_test_hit_food:
-		addi v0,zero, 1
-		jmpi hit_test_done
-
-	hit_test_no_collision:
-		addi v0,zero, 0
-
-	hit_test_done:
-		ret
-; END: hit_test
-;-----------------------------------------------------------------------------------------
-; BEGIN: get_input
-; arguments
-;     none
-;
-; return values
-;     v0 <- Direction of the Head
-get_input:
-	; Getting the Values Buttons and Buttons + 4
-	ldw t1, BUTTONS+4(zero)
-	; checking which Button was pressed with priority to checkpoint
-	addi t3, zero, 0x0010 ; 10000
-	bge t1, t3, case_checkpoint
-; ---------------------------------------------------------
-	; Loading the Head_x and Head_y
-		ldw t6, HEAD_X(zero)
-		ldw t7, HEAD_Y(zero)
-		addi t5,zero,0 ; address counter
-		slli t0, t6, 5 ; x in address
-		slli t2,t7, 2; y counter
-		add t5, t0, t2
-		; loading the direction
-		ldw t6, GSA(t5); old direction
-;----------------------------------------------
-
-	; increase comparing value by shifting
-	srli t3, t3, 0x0001 ; 01000
-	bge t1, t3, case_right
-	srli t3, t3, 0x0001 ; 00100
-	bge t1, t3, case_down
-	srli t3, t3, 0x0001 ; 00010
-	bge t1, t3, case_up
-	srli t3, t3, 0x0001 ; 00001
-	bge t1, t3, case_left
-	bge t1, zero, case_nothing ; 00000
-
-	; Different cases for the buttons
-	case_checkpoint :
-		addi v0,zero,BUTTON_CHECKPOINT
-		ldw t0,CP_VALID(zero)
-		beq t0, zero, get_input_done
-		
-		addi sp, sp, -36
-		stw t0, 0(sp)
-		stw t1, 4(sp)
-		stw t2, 8(sp)
-		stw t3, 12(sp)
-		stw t4, 16(sp)
-		stw t5, 20(sp)
-		stw t6, 24(sp)
-		stw t7, 28(sp)
-		stw ra, 32(sp)
-
-		call restore_checkpoint
-
-		ldw t0, 0(sp)
-		ldw t1, 4(sp)
-		ldw t2, 8(sp)
-		ldw t3, 12(sp)
-		ldw t4, 16(sp)
-		ldw t5, 20(sp)
-		ldw t6, 24(sp)
-		ldw t7, 28(sp)
-		ldw ra, 32(sp)
-		addi sp, sp, 36
-		
-		jmpi get_input_done
-	
-	case_right :
-		; setting v0
-		addi v0, zero, BUTTON_RIGHT
-		; Check if the old direction(t6 is the old direction) is opposite of pressed
-		addi t4, zero, BUTTON_LEFT
-		beq t6,t4, get_input_done
-		stw v0, GSA(t5)
-		jmpi get_input_done
-	
-	case_down :
-		; setting v0
-		addi v0, zero, BUTTON_DOWN
-		; Check if the old direction(t6 is the old direction) is opposite of pressed
-		addi t4, zero, BUTTON_UP
-		beq t6,t4, get_input_done
-		stw v0, GSA(t5)
-		jmpi get_input_done
-	
-	case_up :
-		; setting v0
-		addi v0, zero, BUTTON_UP
-		; Check if the old direction(t6 is the old direction) is opposite of pressed
-		addi t4, zero, BUTTON_DOWN
-		beq t6,t4, get_input_done
-		stw v0, GSA(t5)
-		jmpi get_input_done
-
-	case_left :
-			; setting v0
-		addi v0, zero, BUTTON_LEFT
-		; Check if the old direction(t6 is the old direction) is opposite of pressed
-		addi t4, zero, BUTTON_RIGHT
-		beq t6,t4, get_input_done
-		stw v0, GSA(t5)
-		jmpi get_input_done
-
-	case_nothing :
-		addi v0, zero, BUTTON_NONE
-
-get_input_done:
-		stw zero, BUTTONS+4(zero)
-		ret
-; END: get_input
-;-----------------------------------------------------------------------------------------
-; BEGIN: draw_array
-; arguments
-;     None
-;
-; return values
-;     None
-draw_array:
-
-	addi t0, zero, 0 ; total counter
-	addi t2, zero, 0 ; x
-	addi t3, zero, 0 ; y
-	addi t4, zero, NB_ROWS
-
-	for_loop_draw_array:
-		slli t5,t0,2
-		ldw t1, GSA(t5)
-		beq t1, zero, dont_draw
-
-		add a0, zero, t2 ;x
-		add a1, zero, t3 ;y
-
-		addi sp, sp, -36
-		stw t0, 0(sp)
-		stw t1, 4(sp)
-		stw t2, 8(sp)
-		stw t3, 12(sp)
-		stw t4, 16(sp)
-		stw t5, 20(sp)
-		stw t6, 24(sp)
-		stw t7, 28(sp)
-		stw ra, 32(sp)
-
-		call set_pixel
-
-		ldw t0, 0(sp)
-		ldw t1, 4(sp)
-		ldw t2, 8(sp)
-		ldw t3, 12(sp)
-		ldw t4, 16(sp)
-		ldw t5, 20(sp)
-		ldw t6, 24(sp)
-		ldw t7, 28(sp)
-		ldw ra, 32(sp)
-		addi sp, sp, 36
-		
-
-	dont_draw:
-		addi t0, t0, 1
-		addi t3, t3, 1
-		beq t3, t4, reset_y
-		jmpi skip
-
-	reset_y:
-		addi t3, zero, 0 ; increment y
-		addi t2, t2, 1; increment x
-		
-
-	skip:
-		addi t5, zero, NB_CELLS ;96
-		bne t0, t5, for_loop_draw_array
-	ret
-; END: draw_array
-;-----------------------------------------------------------------------------------------
-; BEGIN: move_snake
-; arguments
-;     a0 <- = 1 if the snake�s head collides with the food, else 0
-;
-; return values
-;     None
-move_snake:
-	; Loading the Head_x and Head_y
-		ldw t6, HEAD_X(zero)
-		ldw t7, HEAD_Y(zero)
-		addi t5,zero,0 ; address counter
-		slli t0, t6,5 ; x counter
-		slli t2,t7,2; y counter
-		add t5, t0,t2
-		ldw t6, GSA(t5); old direction
-	; searching for the good direction
-	addi t0,zero,DIR_LEFT
-	beq t6,t0,move_left
-	addi t0,zero,DIR_UP
-	beq t6,t0,move_up
-	addi t0,zero,DIR_DOWN
-	beq t6,t0,move_down
-	addi t0,zero,DIR_RIGHT
-	beq t6,t0,move_right
-	
-	move_left:
-		; updating HEAD_X
-		ldw t1, HEAD_X(zero)
-		addi t2, zero, 1
-		sub t1, t1, t2
-		stw t1, HEAD_X(zero)
-		; updating the direction
-		addi t0,zero,32
-		sub t5,t5,t0
-		addi t0,zero,DIR_LEFT
-		stw t0, GSA(t5)
-		jmpi move_tail
-
-	move_up:
-		; updating HEAD_Y
-		ldw t1, HEAD_Y(zero)
-		addi t2, zero, 1
-		sub t1, t1, t2
-		stw t1, HEAD_Y(zero)
-		; updating the direction
-		addi t0,zero,4
-		sub t5,t5,t0
-		addi t0,zero,DIR_UP
-		stw t0, GSA(t5)
-		jmpi move_tail
-	
-	move_down:
-		; updating HEAD_Y
-		ldw t1, HEAD_Y(zero)
-		addi t1, t1, 1
-		stw t1, HEAD_Y(zero)
-		; updating direction
-		addi t5,t5,4
-		addi t0,zero,DIR_DOWN
-		stw t0, GSA(t5)
-		jmpi move_tail
-	
-	move_right:
-		; updating HEAD_X
-		ldw t1, HEAD_X(zero)
-		addi t1, t1, 1
-		stw t1, HEAD_X(zero)
-		; updating direction
-		addi t5,t5,32
-		addi t0,zero,DIR_RIGHT
-		stw t0, GSA(t5)
-		jmpi move_tail
-
-	
-	
-	move_tail:
-		; Getting the tail coordinates
-		bne a0,zero, move_tail_done
-		ldw t2, TAIL_X(zero)		
-		ldw t1, TAIL_Y(zero)
-		slli t1, t1, 2; adress y
-		slli t2,t2,5; address x
-		add t3, t2, t1
-		ldw t4, GSA(t3) ; direction
-		; check for direction
-		addi t0,zero,DIR_LEFT
-		beq t4,t0,move_left_tail
-		addi t0,zero,DIR_UP
-		beq t4,t0,move_up_tail
-		addi t0,zero,DIR_DOWN
-		beq t4,t0,move_down_tail
-		addi t0,zero,DIR_RIGHT
-		beq t4,t0,move_right_tail
-
-		move_left_tail:
-			stw zero, GSA(t3)
-			ldw t1, TAIL_X(zero)
-			addi t2, zero, 1
-			sub t1, t1, t2
-			stw t1, TAIL_X(zero)
- 		 	jmpi move_tail_done
-
-		move_right_tail:
-			stw zero, GSA(t3)
-			ldw t1, TAIL_X(zero)
-			addi t1, t1, 1
-			stw t1, TAIL_X(zero)
- 		 	jmpi move_tail_done
-	
-		move_down_tail:
-			stw zero, GSA(t3)
-			ldw t1, TAIL_Y(zero)
-			addi t1, t1, 1
-			stw t1, TAIL_Y(zero)
-			jmpi move_tail_done
-
-		move_up_tail:
-			stw zero, GSA(t3)
-			ldw t1, TAIL_Y(zero)
-			addi t2, zero, 1
-			sub t1, t1, t2
-			stw t1, TAIL_Y(zero)
- 			jmpi move_tail_done
-	
-		move_tail_done:
-			ret
-
-; END: move_snake
-;-----------------------------------------------------------------------------------------
-; BEGIN: save_checkpoint
-save_checkpoint:
-
-ldw t0, SEVEN_SEGS+12(zero)
-ldw t1, SCORE(zero)
-ldw t2, digit_map(zero)
-addi t3, zero, 9
-
-
-
-bne t2,t0, end_save_cp
-bge t3, t1, end_save_cp
-
-addi t0, zero, 1
-stw t0, CP_VALID(zero)
-addi v0, zero, 1
-
-addi t0,zero,0
-addi t1,zero,96
-
-for_loop_gsa:
-    slli t3,t0,2
-	ldw t2, GSA(t3)
-    stw t2,CP_GSA(t3)
-    addi t0,t0,1
-    bne t1,t0,for_loop_gsa
-
-end_save_cp:
-addi sp,sp,-4
-stw ra, 0(sp)
-call blink_score
-ldw ra, 0(sp)
-addi sp,sp,4
-ret
-
-; END: save_checkpoint
-;-----------------------------------------------------------------------------------------
-
-; BEGIN: restore_checkpoint
-restore_checkpoint:
-ldw t0, CP_VALID(zero)
-beq t0, zero, end_restore_cp
-
-addi t0,zero,0
-addi t1,zero,96
-
-for_loop_cp_gsa:
-    slli t3,t0,2
-	ldw t2,CP_GSA(t3)
-    stw t2,GSA(t3)
-    addi t0,t0,1
-    bne t1,t0,for_loop_cp_gsa
-
-addi v0, zero, 1
-
-end_restore_cp:
-ret
-
-; END: restore_checkpoint
-;-----------------------------------------------------------------------------------------
-; BEGIN: blink_score
-blink_score:
-	ldw t0, SEVEN_SEGS(zero)
-	ldw t1, SEVEN_SEGS+4(zero)
-	ldw t2, SEVEN_SEGS+8(zero)
-	ldw t3, SEVEN_SEGS+12(zero)
-	addi t4, zero, 0
-	addi t5, zero, 50
-
-	Loop_blink:
-	stw zero, SEVEN_SEGS(zero)
-	stw zero, SEVEN_SEGS+4(zero)
-	stw zero, SEVEN_SEGS+8(zero)
-	stw zero, SEVEN_SEGS+12(zero)
-	addi sp, sp, -4
-	stw ra, 0(sp)
-	call wait_blink_score
-	call wait_blink_score
-	call wait_blink_score
-	ldw ra,0(sp)
-	addi sp,sp,4
-
-	stw t0, 0(sp)
-		stw t1, 4(sp)
-		stw t2, 8(sp)
-		stw t3, 12(sp)
-		stw t4, 16(sp)
-		stw t5, 20(sp)
-		stw t6, 24(sp)
-		stw t7, 28(sp)
-		stw ra, 32(sp)
-
-		call display_score
-
-		ldw t0, 0(sp)
-		ldw t1, 4(sp)
-		ldw t2, 8(sp)
-		ldw t3, 12(sp)
-		ldw t4, 16(sp)
-		ldw t5, 20(sp)
-		ldw t6, 24(sp)
-		ldw t7, 28(sp)
-		ldw ra, 32(sp)
-		addi sp, sp, 36
-
-	addi t4, t4, 1
-	bne t4, t5, Loop_blink
-ret
-wait_blink_score:
-	addi t7, zero,-1
-	addi t6, zero, 30000
-	loop_wait:
-	addi t7, t7, 1
-	bne t7, t6, loop_wait
-ret
-; END: blink_score
-digit_map:
-.word 0xFC ; 0
-.word 0x60 ; 1
-.word 0xDA ; 2
-.word 0xF2 ; 3
-.word 0x66 ; 4
-.word 0xB6 ; 5
-.word 0xBE ; 6
-.word 0xE0 ; 7
-.word 0xFE ; 8
-.word 0xF6 ; 9
+:0400000006C800042A
+:0400010000002800D3
+:040002000000068074
+:0400030000004F802A
+:0400040000003BC0FD
+:0400050010000426BD
+:0400060002000044B0
+:0400070012000426B9
+:04000800020000846E
+:0400090012000A26B1
+:04000A0001000004ED
+:04000B00000005816B
+:04000C0001000044AB
+:04000D0002040417CE
+:04000E004200004468
+:04000F0002040415CE
+:0400100000007F402D
+:0400110000000C00DF
+:040012000000378033
+:040013000000058163
+:040014000000068062
+:0400150000000041A6
+:0400160000006A007C
+:0400170000000900DC
+:040018000000604044
+:040019000000008162
+:04001A0002000004DC
+:04001B000244E204B5
+:04001C00028000045A
+:04001D004200004459
+:04001E000280000458
+:04001F0052800044C7
+:04002000527FFE1EEF
+:040021004200004455
+:04002200427FFA1E01
+:04002300F800283A7F
+:0400240000080015BB
+:0400250000080115B9
+:0400260000080215B7
+:04002700F800283A7B
+:04002800034000444D
+:04002900201C90FA0D
+:04002A00715D883A42
+:04002B006B9A983AFA
+:04002C0023C80017CE
+:04002D006BDAB03AA0
+:04002E00234800154E
+:04002F00F800283A73
+:040030000202501761
+:04003100020466154A
+:040032000204671548
+:040033000244041768
+:040034004800031E5F
+:040035000204681544
+:040036000204691542
+:04003700000027C1DD
+:0400380002C00004FE
+:0400390002800244FB
+:04003A005240030E1F
+:04003B004A7FFD8477
+:04003C005AC0028420
+:04003D0000000E8130
+:04003E004A801126BD
+:04003F0052BFFFC4E9
+:040040004A801226BA
+:0400410052BFFFC4E7
+:040042004A801326B7
+:0400430052BFFFC4E5
+:040044004A801426B4
+:0400450052BFFFC4E3
+:040046004A801526B1
+:0400470052BFFFC4E1
+:040048004A801626AE
+:0400490052BFFFC4DF
+:04004A004A801726AB
+:04004B0052BFFFC4DD
+:04004C004A801826A8
+:04004D0052BFFFC4DB
+:04004E004A801926A5
+:04004F0000001AC1D2
+:040050000202591738
+:040051000204691527
+:0400520000001B810E
+:040053000202581736
+:040054000204691524
+:0400550000001B810B
+:040056000202571734
+:040057000204691521
+:0400580000001B8108
+:040059000202561732
+:04005A00020469151E
+:04005B0000001B8105
+:04005C000202551730
+:04005D00020469151B
+:04005E0000001B8102
+:04005F00020254172E
+:040060000204691518
+:0400610000001B81FF
+:04006200020253172C
+:040063000204691515
+:0400640000001B81FC
+:04006500020252172A
+:040066000204691512
+:0400670000001B81F9
+:040068000202511728
+:04006900020469150F
+:04006A0000001B81F6
+:04006B000202501726
+:04006C00020469150C
+:04006D0000001B81F3
+:04006E000280168472
+:04006F005A8011267C
+:0400700052BFFD84FA
+:040071005A80122679
+:0400720052BFFD84F8
+:040073005A80132676
+:0400740052BFFD84F6
+:040075005A80142673
+:0400760052BFFD84F4
+:040077005A80152670
+:0400780052BFFD84F2
+:040079005A8016266D
+:04007A0052BFFD84F0
+:04007B005A8017266A
+:04007C0052BFFD84EE
+:04007D005A80182667
+:04007E0052BFFD84EC
+:04007F005A80192664
+:040080000000270154
+:040081000202591707
+:0400820002046815F7
+:04008300000027C191
+:040084000202581705
+:0400850002046815F4
+:04008600000027C18E
+:040087000202571703
+:0400880002046815F1
+:04008900000027C18B
+:04008A000202561701
+:04008B0002046815EE
+:04008C00000027C188
+:04008D0002025517FF
+:04008E0002046815EB
+:04008F00000027C185
+:0400900002025417FD
+:0400910002046815E8
+:04009200000027C182
+:0400930002025317FB
+:0400940002046815E5
+:04009500000027C17F
+:0400960002025217F9
+:0400970002046815E2
+:04009800000027C17C
+:0400990002025117F7
+:04009A0002046815DF
+:04009B00000027C179
+:04009C0002025017F5
+:04009D0002046815DC
+:04009E00000027C176
+:04009F00F800283A03
+:0400A000DEFFFF047C
+:0400A100DFC00015A7
+:0400A2000000090051
+:0400A300DFC00017A3
+:0400A400DEC00104B5
+:0400A500000400153E
+:0400A600000401153C
+:0400A700000402153A
+:0400A8000004031538
+:0400A9000004041536
+:0400AA00020001044B
+:0400AB000204051531
+:0400AC00DEFFF70478
+:0400AD00DA00001560
+:0400AE00DA4001151E
+:0400AF00DA800215DC
+:0400B000DAC003159A
+:0400B100DB00041557
+:0400B200DB40051515
+:0400B300DB800615D3
+:0400B400DBC0071591
+:0400B500DFC008158B
+:0400B60000000C003A
+:0400B700DA00001754
+:0400B800DA40011712
+:0400B900DA800217D0
+:0400BA00DAC003178E
+:0400BB00DB0004174B
+:0400BC00DB40051709
+:0400BD00DB800617C7
+:0400BE00DBC0071785
+:0400BF00DFC008177F
+:0400C000DEC0090491
+:0400C10002400004F5
+:0400C200028017C4DD
+:0400C3004A4000446B
+:0400C400481690BA90
+:0400C50058040515C1
+:0400C6004ABFFC1E13
+:0400C700DEFFF7045D
+:0400C800DA00001545
+:0400C900DA40011503
+:0400CA00DA800215C1
+:0400CB00DAC003157F
+:0400CC00DB0004153C
+:0400CD00DB400515FA
+:0400CE00DB800615B8
+:0400CF00DBC0071576
+:0400D000DFC0081570
+:0400D1000000378074
+:0400D200000060408A
+:0400D300DA00001738
+:0400D400DA400117F6
+:0400D500DA800217B4
+:0400D600DAC0031772
+:0400D700DB0004172F
+:0400D800DB400517ED
+:0400D900DB800617AB
+:0400DA00DBC0071769
+:0400DB00DFC0081763
+:0400DC00DEC0090475
+:0400DD00F800283AC5
+:0400DE0002080417F9
+:0400DF0042403FCC90
+:0400E000028018047E
+:0400E1004ABFFC0E08
+:0400E200481290BA76
+:0400E3004AC40517EF
+:0400E40003000044D1
+:0400E5005B3FF8265F
+:0400E600630000446F
+:0400E7005B3FF6265F
+:0400E800630000446D
+:0400E9005B3FF4265F
+:0400EA00630000446B
+:0400EB005B3FF2265F
+:0400EC000340014488
+:0400ED004B44051566
+:0400EE00F800283AB4
+:0400EF0002040017F0
+:0400F00002440117AE
+:0400F1004014917AAC
+:0400F200481690BA62
+:0400F30052D9883A1C
+:0400F4006344051745
+:0400F5000280004441
+:0400F6006A800626F0
+:0400F70002800084FF
+:0400F8006A801126E3
+:0400F900028000C4BD
+:0400FA006A801D26D5
+:0400FB00028001047A
+:0400FC006A802A26C6
+:0400FD004000382661
+:0400FE00633FF80460
+:0400FF0062840517FB
+:040100000380004434
+:0401010053803626CB
+:0401020073800044C2
+:0401030053803426CB
+:0401040073800044C0
+:0401050053803226CB
+:0401060073800044BE
+:0401070053803026CB
+:0401080073800044BC
+:0401090053803026C9
+:04010A0048002B2658
+:04010B00633FFF044B
+:04010C0062840517ED
+:04010D000380004427
+:04010E0053802926CB
+:04010F0073800044B5
+:0401100053802726CB
+:0401110073800044B3
+:0401120053802526CB
+:0401130073800044B1
+:0401140053802326CB
+:0401150073800044AF
+:0401160053802326C9
+:0401170000004F0194
+:0401180003C001C45B
+:040119004BC01C2695
+:04011A006300010479
+:04011B0062840517DE
+:04011C000380004418
+:04011D0053801A26CB
+:04011E0073800044A6
+:04011F0053801826CB
+:0401200073800044A4
+:0401210053801626CB
+:0401220073800044A2
+:0401230053801426CB
+:0401240073800044A0
+:0401250053801426C9
+:0401260000004F0185
+:0401270003C002C44B
+:0401280043C00D269D
+:040129006300080463
+:04012A0062840517CF
+:04012B000380004409
+:04012C0053800B26CB
+:04012D007380004497
+:04012E0053800926CB
+:04012F007380004495
+:0401300053800726CB
+:040131007380004493
+:0401320053800526CB
+:040133007380004491
+:0401340053800526C9
+:0401350000004F0176
+:0401360000800084C1
+:0401370000004F4134
+:0401380000800084BF
+:0401390000004F4132
+:04013A0000800044FD
+:04013B0000004F4130
+:04013C00008000043B
+:04013D00F800283A64
+:04013E0002480D174F
+:04013F0002C00404F2
+:040140004AC0100E93
+:04014100038400171C
+:0401420003C40117DA
+:040143000340000471
+:040144007010917A2C
+:04014500781490BAE0
+:04014600429B883A16
+:040147006B840517A9
+:040148005816D07AFB
+:040149004AC0200E7A
+:04014A005816D07AF9
+:04014B004AC0230E75
+:04014C005816D07AF7
+:04014D004AC0260E70
+:04014E005816D07AF5
+:04014F004AC0290E6B
+:0401500048002D0E28
+:0401510000800144E5
+:04015200020480170C
+:0401530040002B2617
+:04015400DEFFF704CF
+:04015500DA000015B7
+:04015600DA40011575
+:04015700DA80021533
+:04015800DAC00315F1
+:04015900DB000415AE
+:04015A00DB4005156C
+:04015B00DB8006152A
+:04015C00DBC00715E8
+:04015D00DFC00815E2
+:04015E00000084C059
+:04015F00DA000017AB
+:04016000DA40011769
+:04016100DA80021727
+:04016200DAC00317E5
+:04016300DB000417A2
+:04016400DB40051760
+:04016500DB8006171E
+:04016600DBC00717DC
+:04016700DFC00817D6
+:04016800DEC00904E8
+:0401690000005FC172
+:04016A00008001040C
+:04016B000300004449
+:04016C0073001226E4
+:04016D006884051588
+:04016E0000005FC16D
+:04016F00008000C448
+:040170000300008404
+:0401710073000D26E4
+:040172006884051583
+:0401730000005FC168
+:040174000080008483
+:04017500030000C4BF
+:0401760073000826E4
+:04017700688405157E
+:0401780000005FC163
+:0401790000800044BE
+:04017A000300010479
+:04017B0073000326E4
+:04017C006884051579
+:04017D0000005FC15E
+:04017E0000800004F9
+:04017F0000080D1552
+:04018000F800283A21
+:040181000200000474
+:0401820002800004F3
+:0401830002C00004B2
+:04018400030002046E
+:04018500401A90BAD2
+:040186006A440517AB
+:0401870048001726EF
+:040188000289883A26
+:0401890002CB883AE3
+:04018A00DEFFF70499
+:04018B00DA00001581
+:04018C00DA4001153F
+:04018D00DA800215FD
+:04018E00DAC00315BB
+:04018F00DB00041578
+:04019000DB40051536
+:04019100DB800615F4
+:04019200DBC00715B2
+:04019300DFC00815AC
+:0401940000000A005D
+:04019500DA00001775
+:04019600DA40011733
+:04019700DA800217F1
+:04019800DAC00317AF
+:04019900DB0004176C
+:04019A00DB4005172A
+:04019B00DB800617E8
+:04019C00DBC00717A6
+:04019D00DFC00817A0
+:04019E00DEC00904B2
+:04019F0042000044D6
+:0401A0005AC00044FD
+:0401A1005B000126D8
+:0401A20000006941AF
+:0401A30002C0000492
+:0401A4005280004441
+:0401A50003401804F7
+:0401A600437FDE1E97
+:0401A700F800283AFA
+:0401A80003840017B5
+:0401A90003C4011773
+:0401AA00034000040A
+:0401AB007010917AC5
+:0401AC00781490BA79
+:0401AD00429B883AAF
+:0401AE006B84051742
+:0401AF000200004406
+:0401B00072000626AD
+:0401B10002000084C4
+:0401B20072000D26A4
+:0401B300020000C482
+:0401B400720014269B
+:0401B500020001043F
+:0401B6007200192694
+:0401B70002440017E7
+:0401B800028000447D
+:0401B9004A93C83A63
+:0401BA0002440015E6
+:0401BB000200080432
+:0401BC006A1BC83AB8
+:0401BD0002000044F8
+:0401BE006A040515B5
+:0401BF00000075C106
+:0401C00002440117DD
+:0401C1000280004474
+:0401C2004A93C83A5A
+:0401C30002440115DC
+:0401C4000200010430
+:0401C5006A1BC83AAF
+:0401C60002000084AF
+:0401C7006A040515AC
+:0401C800000075C1FD
+:0401C90002440117D4
+:0401CA004A40004463
+:0401CB0002440115D4
+:0401CC006B4001047F
+:0401CD00020000C468
+:0401CE006A040515A5
+:0401CF00000075C1F6
+:0401D00002440017CE
+:0401D1004A4000445C
+:0401D20002440015CE
+:0401D3006B40080471
+:0401D4000200010420
+:0401D5006A0405159E
+:0401D600000075C1EF
+:0401D7002000241EC2
+:0401D8000284021784
+:0401D90002440317C2
+:0401DA00481290BA7D
+:0401DB005014917AB1
+:0401DC005257883AB4
+:0401DD005B040517A3
+:0401DE0002000044D7
+:0401DF00620006268E
+:0401E0000200008495
+:0401E100620014267E
+:0401E200020000C453
+:0401E30062000D2683
+:0401E4000200010410
+:0401E5006200062688
+:0401E600580405159F
+:0401E70002440217B5
+:0401E800028000444D
+:0401E9004A93C83A33
+:0401EA0002440215B4
+:0401EB0000007F0190
+:0401EC005804051599
+:0401ED0002440217AF
+:0401EE004A4000443F
+:0401EF0002440215AF
+:0401F00000007F018B
+:0401F1005804051594
+:0401F20002440317A9
+:0401F3004A4000443A
+:0401F40002440315A9
+:0401F50000007F0186
+:0401F600580405158F
+:0401F70002440317A4
+:0401F800028000443D
+:0401F9004A93C83A23
+:0401FA0002440315A3
+:0401FB0000007F0180
+:0401FC00F800283AA5
+:0401FD000204691778
+:0401FE00024404179C
+:0401FF000282501711
+:0402000002C00244F2
+:040201005200101E79
+:040202005A400F0E41
+:0402030002000044B1
+:04020400020480155B
+:040205000080004431
+:0402060002000004EE
+:040207000240180495
+:04020800401690BA52
+:040209005A840517F7
+:04020A005A84861577
+:04020B004200004469
+:04020C004A3FFB1E4C
+:04020D00DEFFFF040D
+:04020E00DFC0001538
+:04020F00000088C0A3
+:04021000DFC0001734
+:04021100DEC0010446
+:04021200F800283A8E
+:04021300020480174A
+:0402140040000D2673
+:0402150002000004DF
+:040216000240180486
+:04021700401690BA43
+:040218005A84861767
+:040219005A840515E9
+:04021A00420000445A
+:04021B004A3FFB1E3D
+:04021C00008000441A
+:04021D00DEFFFF04FD
+:04021E00DFC0001528
+:04021F00000088C093
+:04022000DFC0001724
+:04022100DEC0010436
+:04022200F800283A7E
+:040223000204661754
+:040224000244671712
+:0402250002846817D0
+:0402260002C469178E
+:0402270003000004CC
+:0402280003400C84FF
+:040229000004661552
+:04022A000004671550
+:04022B00000468154E
+:04022C00000469154C
+:04022D00DEFFFF04ED
+:04022E00DFC0001518
+:04022F00000092C079
+:04023000000092C078
+:04023100000092C077
+:04023200DFC0001712
+:04023300DEC0010424
+:04023400DA000015D7
+:04023500DA40011595
+:04023600DA80021553
+:04023700DAC0031511
+:04023800DB000415CE
+:04023900DB4005158C
+:04023A00DB8006154A
+:04023B00DBC0071508
+:04023C00DFC0081502
+:04023D0000000C00B1
+:04023E00DA000017CB
+:04023F00DA40011789
+:04024000DA80021747
+:04024100DAC0031705
+:04024200DB000417C2
+:04024300DB40051780
+:04024400DB8006173E
+:04024500DBC00717FC
+:04024600DFC00817F6
+:04024700DEC0090408
+:04024800630000440B
+:04024900637FDF1ED2
+:04024A00F800283A56
+:04024B0003FFFFC4EA
+:04024C00039D4C04BE
+:04024D007BC000442E
+:04024E007BBFFE1E56
+:04024F00F800283A51
+:04025000000000FCAE
+:040251000000006049
+:04025200000000DACE
+:04025300000000F2B5
+:040254000000006640
+:04025500000000B6EF
+:04025600000000BEE6
+:04025700000000E0C3
+:04025800000000FEA4
+:04025900000000F6AB
+:04025A0000000000A0
+:04025B00000000009F
+:04025C00000000009E
+:04025D00000000009D
+:04025E00000000009C
+:04025F00000000009B
+:04026000000000009A
+:040261000000000099
+:040262000000000098
+:040263000000000097
+:040264000000000096
+:040265000000000095
+:040266000000000094
+:040267000000000093
+:040268000000000092
+:040269000000000091
+:04026A000000000090
+:04026B00000000008F
+:04026C00000000008E
+:04026D00000000008D
+:04026E00000000008C
+:04026F00000000008B
+:04027000000000008A
+:040271000000000089
+:040272000000000088
+:040273000000000087
+:040274000000000086
+:040275000000000085
+:040276000000000084
+:040277000000000083
+:040278000000000082
+:040279000000000081
+:04027A000000000080
+:04027B00000000007F
+:04027C00000000007E
+:04027D00000000007D
+:04027E00000000007C
+:04027F00000000007B
+:04028000000000007A
+:040281000000000079
+:040282000000000078
+:040283000000000077
+:040284000000000076
+:040285000000000075
+:040286000000000074
+:040287000000000073
+:040288000000000072
+:040289000000000071
+:04028A000000000070
+:04028B00000000006F
+:04028C00000000006E
+:04028D00000000006D
+:04028E00000000006C
+:04028F00000000006B
+:04029000000000006A
+:040291000000000069
+:040292000000000068
+:040293000000000067
+:040294000000000066
+:040295000000000065
+:040296000000000064
+:040297000000000063
+:040298000000000062
+:040299000000000061
+:04029A000000000060
+:04029B00000000005F
+:04029C00000000005E
+:04029D00000000005D
+:04029E00000000005C
+:04029F00000000005B
+:0402A000000000005A
+:0402A1000000000059
+:0402A2000000000058
+:0402A3000000000057
+:0402A4000000000056
+:0402A5000000000055
+:0402A6000000000054
+:0402A7000000000053
+:0402A8000000000052
+:0402A9000000000051
+:0402AA000000000050
+:0402AB00000000004F
+:0402AC00000000004E
+:0402AD00000000004D
+:0402AE00000000004C
+:0402AF00000000004B
+:0402B000000000004A
+:0402B1000000000049
+:0402B2000000000048
+:0402B3000000000047
+:0402B4000000000046
+:0402B5000000000045
+:0402B6000000000044
+:0402B7000000000043
+:0402B8000000000042
+:0402B9000000000041
+:0402BA000000000040
+:0402BB00000000003F
+:0402BC00000000003E
+:0402BD00000000003D
+:0402BE00000000003C
+:0402BF00000000003B
+:0402C000000000003A
+:0402C1000000000039
+:0402C2000000000038
+:0402C3000000000037
+:0402C4000000000036
+:0402C5000000000035
+:0402C6000000000034
+:0402C7000000000033
+:0402C8000000000032
+:0402C9000000000031
+:0402CA000000000030
+:0402CB00000000002F
+:0402CC00000000002E
+:0402CD00000000002D
+:0402CE00000000002C
+:0402CF00000000002B
+:0402D000000000002A
+:0402D1000000000029
+:0402D2000000000028
+:0402D3000000000027
+:0402D4000000000026
+:0402D5000000000025
+:0402D6000000000024
+:0402D7000000000023
+:0402D8000000000022
+:0402D9000000000021
+:0402DA000000000020
+:0402DB00000000001F
+:0402DC00000000001E
+:0402DD00000000001D
+:0402DE00000000001C
+:0402DF00000000001B
+:0402E000000000001A
+:0402E1000000000019
+:0402E2000000000018
+:0402E3000000000017
+:0402E4000000000016
+:0402E5000000000015
+:0402E6000000000014
+:0402E7000000000013
+:0402E8000000000012
+:0402E9000000000011
+:0402EA000000000010
+:0402EB00000000000F
+:0402EC00000000000E
+:0402ED00000000000D
+:0402EE00000000000C
+:0402EF00000000000B
+:0402F000000000000A
+:0402F1000000000009
+:0402F2000000000008
+:0402F3000000000007
+:0402F4000000000006
+:0402F5000000000005
+:0402F6000000000004
+:0402F7000000000003
+:0402F8000000000002
+:0402F9000000000001
+:0402FA000000000000
+:0402FB0000000000FF
+:0402FC0000000000FE
+:0402FD0000000000FD
+:0402FE0000000000FC
+:0402FF0000000000FB
+:0403000000000000F9
+:0403010000000000F8
+:0403020000000000F7
+:0403030000000000F6
+:0403040000000000F5
+:0403050000000000F4
+:0403060000000000F3
+:0403070000000000F2
+:0403080000000000F1
+:0403090000000000F0
+:04030A0000000000EF
+:04030B0000000000EE
+:04030C0000000000ED
+:04030D0000000000EC
+:04030E0000000000EB
+:04030F0000000000EA
+:0403100000000000E9
+:0403110000000000E8
+:0403120000000000E7
+:0403130000000000E6
+:0403140000000000E5
+:0403150000000000E4
+:0403160000000000E3
+:0403170000000000E2
+:0403180000000000E1
+:0403190000000000E0
+:04031A0000000000DF
+:04031B0000000000DE
+:04031C0000000000DD
+:04031D0000000000DC
+:04031E0000000000DB
+:04031F0000000000DA
+:0403200000000000D9
+:0403210000000000D8
+:0403220000000000D7
+:0403230000000000D6
+:0403240000000000D5
+:0403250000000000D4
+:0403260000000000D3
+:0403270000000000D2
+:0403280000000000D1
+:0403290000000000D0
+:04032A0000000000CF
+:04032B0000000000CE
+:04032C0000000000CD
+:04032D0000000000CC
+:04032E0000000000CB
+:04032F0000000000CA
+:0403300000000000C9
+:0403310000000000C8
+:0403320000000000C7
+:0403330000000000C6
+:0403340000000000C5
+:0403350000000000C4
+:0403360000000000C3
+:0403370000000000C2
+:0403380000000000C1
+:0403390000000000C0
+:04033A0000000000BF
+:04033B0000000000BE
+:04033C0000000000BD
+:04033D0000000000BC
+:04033E0000000000BB
+:04033F0000000000BA
+:0403400000000000B9
+:0403410000000000B8
+:0403420000000000B7
+:0403430000000000B6
+:0403440000000000B5
+:0403450000000000B4
+:0403460000000000B3
+:0403470000000000B2
+:0403480000000000B1
+:0403490000000000B0
+:04034A0000000000AF
+:04034B0000000000AE
+:04034C0000000000AD
+:04034D0000000000AC
+:04034E0000000000AB
+:04034F0000000000AA
+:0403500000000000A9
+:0403510000000000A8
+:0403520000000000A7
+:0403530000000000A6
+:0403540000000000A5
+:0403550000000000A4
+:0403560000000000A3
+:0403570000000000A2
+:0403580000000000A1
+:0403590000000000A0
+:04035A00000000009F
+:04035B00000000009E
+:04035C00000000009D
+:04035D00000000009C
+:04035E00000000009B
+:04035F00000000009A
+:040360000000000099
+:040361000000000098
+:040362000000000097
+:040363000000000096
+:040364000000000095
+:040365000000000094
+:040366000000000093
+:040367000000000092
+:040368000000000091
+:040369000000000090
+:04036A00000000008F
+:04036B00000000008E
+:04036C00000000008D
+:04036D00000000008C
+:04036E00000000008B
+:04036F00000000008A
+:040370000000000089
+:040371000000000088
+:040372000000000087
+:040373000000000086
+:040374000000000085
+:040375000000000084
+:040376000000000083
+:040377000000000082
+:040378000000000081
+:040379000000000080
+:04037A00000000007F
+:04037B00000000007E
+:04037C00000000007D
+:04037D00000000007C
+:04037E00000000007B
+:04037F00000000007A
+:040380000000000079
+:040381000000000078
+:040382000000000077
+:040383000000000076
+:040384000000000075
+:040385000000000074
+:040386000000000073
+:040387000000000072
+:040388000000000071
+:040389000000000070
+:04038A00000000006F
+:04038B00000000006E
+:04038C00000000006D
+:04038D00000000006C
+:04038E00000000006B
+:04038F00000000006A
+:040390000000000069
+:040391000000000068
+:040392000000000067
+:040393000000000066
+:040394000000000065
+:040395000000000064
+:040396000000000063
+:040397000000000062
+:040398000000000061
+:040399000000000060
+:04039A00000000005F
+:04039B00000000005E
+:04039C00000000005D
+:04039D00000000005C
+:04039E00000000005B
+:04039F00000000005A
+:0403A0000000000059
+:0403A1000000000058
+:0403A2000000000057
+:0403A3000000000056
+:0403A4000000000055
+:0403A5000000000054
+:0403A6000000000053
+:0403A7000000000052
+:0403A8000000000051
+:0403A9000000000050
+:0403AA00000000004F
+:0403AB00000000004E
+:0403AC00000000004D
+:0403AD00000000004C
+:0403AE00000000004B
+:0403AF00000000004A
+:0403B0000000000049
+:0403B1000000000048
+:0403B2000000000047
+:0403B3000000000046
+:0403B4000000000045
+:0403B5000000000044
+:0403B6000000000043
+:0403B7000000000042
+:0403B8000000000041
+:0403B9000000000040
+:0403BA00000000003F
+:0403BB00000000003E
+:0403BC00000000003D
+:0403BD00000000003C
+:0403BE00000000003B
+:0403BF00000000003A
+:0403C0000000000039
+:0403C1000000000038
+:0403C2000000000037
+:0403C3000000000036
+:0403C4000000000035
+:0403C5000000000034
+:0403C6000000000033
+:0403C7000000000032
+:0403C8000000000031
+:0403C9000000000030
+:0403CA00000000002F
+:0403CB00000000002E
+:0403CC00000000002D
+:0403CD00000000002C
+:0403CE00000000002B
+:0403CF00000000002A
+:0403D0000000000029
+:0403D1000000000028
+:0403D2000000000027
+:0403D3000000000026
+:0403D4000000000025
+:0403D5000000000024
+:0403D6000000000023
+:0403D7000000000022
+:0403D8000000000021
+:0403D9000000000020
+:0403DA00000000001F
+:0403DB00000000001E
+:0403DC00000000001D
+:0403DD00000000001C
+:0403DE00000000001B
+:0403DF00000000001A
+:0403E0000000000019
+:0403E1000000000018
+:0403E2000000000017
+:0403E3000000000016
+:0403E4000000000015
+:0403E5000000000014
+:0403E6000000000013
+:0403E7000000000012
+:0403E8000000000011
+:0403E9000000000010
+:0403EA00000000000F
+:0403EB00000000000E
+:0403EC00000000000D
+:0403ED00000000000C
+:0403EE00000000000B
+:0403EF00000000000A
+:0403F0000000000009
+:0403F1000000000008
+:0403F2000000000007
+:0403F3000000000006
+:0403F4000000000005
+:0403F5000000000004
+:0403F6000000000003
+:0403F7000000000002
+:0403F8000000000001
+:0403F9000000000000
+:0403FA0000000000FF
+:0403FB0000000000FE
+:0403FC0000000000FD
+:0403FD0000000000FC
+:0403FE0000000000FB
+:0403FF0000000000FA
+:00000001FF

@@ -53,8 +53,8 @@ addi    sp, zero, LEDS
 ; return values
 ;     This procedure should never return.
 main:
-
-
+stw zero, CP_VALID(zero)
+main_official:
 call init_game
 start:
 call wait_main
@@ -85,7 +85,9 @@ main_case_hit_food:
 
 main_case_end_game:
 	call wait_main
-	jmpi main
+	jmpi main_official
+  00
+  00
 
 next_step_main:
 call move_snake
