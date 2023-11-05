@@ -97,7 +97,7 @@ wait_main:
 	addi t1, zero, 100
 	wait_procedure:
 	addi t0,t0,1
-	bne t0,zero,wait_procedure
+	bne t0,t1,wait_procedure
 	ret
 ;-----------------------------------------------------------------------------------------
 ; BEGIN: clear_leds
@@ -303,7 +303,11 @@ ret
 ;-----------------------------------------------------------------------------------------
 ; BEGIN: init_game
 init_game:
+	addi sp, sp, -4
+	stw ra, 0(sp)
 	call clear_leds
+	ldw ra, 0(sp)
+	addi sp, sp, 4
 	stw zero, HEAD_X(zero)
 	stw zero, HEAD_Y(zero)
 	stw zero, TAIL_X(zero)
@@ -311,7 +315,31 @@ init_game:
 	stw zero, SCORE(zero)
 	addi t0, zero, DIR_RIGHT
 	stw t0, GSA(zero)
-	call display_score
+
+	addi sp, sp, -36
+		stw t0, 0(sp)
+		stw t1, 4(sp)
+		stw t2, 8(sp)
+		stw t3, 12(sp)
+		stw t4, 16(sp)
+		stw t5, 20(sp)
+		stw t6, 24(sp)
+		stw t7, 28(sp)
+		stw ra, 32(sp)
+
+		call display_score
+
+		ldw t0, 0(sp)
+		ldw t1, 4(sp)
+		ldw t2, 8(sp)
+		ldw t3, 12(sp)
+		ldw t4, 16(sp)
+		ldw t5, 20(sp)
+		ldw t6, 24(sp)
+		ldw t7, 28(sp)
+		ldw ra, 32(sp)
+		addi sp, sp, 36
+
 	addi t1, zero, 0
 	addi t2, zero, 95
 
@@ -320,8 +348,30 @@ init_game:
 	slli t3,t1,2
 	stw zero, GSA(t3)
 	bne t1, t2, init_game_loop_reset_GSA
-	call create_food
-	call draw_array
+	addi sp, sp, -36
+		stw t0, 0(sp)
+		stw t1, 4(sp)
+		stw t2, 8(sp)
+		stw t3, 12(sp)
+		stw t4, 16(sp)
+		stw t5, 20(sp)
+		stw t6, 24(sp)
+		stw t7, 28(sp)
+		stw ra, 32(sp)
+
+		call create_food
+		call draw_array
+
+		ldw t0, 0(sp)
+		ldw t1, 4(sp)
+		ldw t2, 8(sp)
+		ldw t3, 12(sp)
+		ldw t4, 16(sp)
+		ldw t5, 20(sp)
+		ldw t6, 24(sp)
+		ldw t7, 28(sp)
+		ldw ra, 32(sp)
+		addi sp, sp, 36
 	ret
 ; END: init_game
 ;-----------------------------------------------------------------------------------------
@@ -759,7 +809,11 @@ blink_score:
 	stw zero, SEVEN_SEGS+4(zero)
 	stw zero, SEVEN_SEGS+8(zero)
 	stw zero, SEVEN_SEGS+12(zero)
+	addi sp, sp, -4
+	stw ra, 0(sp)
 	call wait_blink_score
+	ldw ra,0(sp)
+	addi sp,sp+4
 	stw t0, SEVEN_SEGS(zero)
 	stw t1, SEVEN_SEGS+4(zero)
 	stw t2, SEVEN_SEGS+8(zero)
