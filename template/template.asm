@@ -78,12 +78,13 @@ main_case_hit_food:
 	ldw t0, SCORE(zero)
 	addi t0,t0,1
 	stw t0, SCORE(zero)
+	call save_checkpoint
 	call display_score
 	call create_food
 	jmpi next_step_main
 
 main_case_end_game:
-	call blink_score
+	call wait_main
 	jmpi main
 
 next_step_main:
@@ -554,6 +555,33 @@ get_input:
 	; Different cases for the buttons
 	case_checkpoint :
 		addi v0,zero,BUTTON_CHECKPOINT
+		ldw t0,CP_VALID(zero)
+		beq t0, zero, get_input_done
+		
+		addi sp, sp, -36
+		stw t0, 0(sp)
+		stw t1, 4(sp)
+		stw t2, 8(sp)
+		stw t3, 12(sp)
+		stw t4, 16(sp)
+		stw t5, 20(sp)
+		stw t6, 24(sp)
+		stw t7, 28(sp)
+		stw ra, 32(sp)
+
+		call restore_checkpoint
+
+		ldw t0, 0(sp)
+		ldw t1, 4(sp)
+		ldw t2, 8(sp)
+		ldw t3, 12(sp)
+		ldw t4, 16(sp)
+		ldw t5, 20(sp)
+		ldw t6, 24(sp)
+		ldw t7, 28(sp)
+		ldw ra, 32(sp)
+		addi sp, sp, 36
+		
 		jmpi get_input_done
 	
 	case_right :
@@ -818,8 +846,13 @@ for_loop_gsa:
     stw t2,CP_GSA(t3)
     addi t0,t0,1
     bne t1,t0,for_loop_gsa
-
+addi sp,sp,-4
+stw ra, 0(sp)
+call blink_score
+ldw ra, 0(sp)
+addi sp,sp,4
 end_save_cp:
+
 ret
 
 ; END: save_checkpoint
@@ -841,8 +874,13 @@ for_loop_cp_gsa:
     bne t1,t0,for_loop_cp_gsa
 
 addi v0, zero, 1
-
+addi sp,sp,-4
+stw ra, 0(sp)
+call blink_score
+ldw ra, 0(sp)
+addi sp,sp,4
 end_restore_cp:
+
 ret
 
 ; END: restore_checkpoint
