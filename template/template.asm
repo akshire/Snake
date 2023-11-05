@@ -57,6 +57,11 @@ start:
 call clear_leds
 
 addi t0, zero, 10000
+wait_procedure_6:
+addi t0,t0,-1
+bne t0,zero,wait_procedure_6
+
+addi t0, zero, 10000
 wait_procedure_5:
 addi t0,t0,-1
 bne t0,zero,wait_procedure_5

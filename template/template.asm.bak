@@ -56,7 +56,12 @@ main:
 start:
 call clear_leds
 
-addi t0, zero, 65535
+addi t0, zero, 10000
+wait_procedure_5:
+addi t0,t0,-1
+bne t0,zero,wait_procedure_5
+
+addi t0, zero, 10000
 wait_procedure:
 addi t0,t0,-1
 bne t0,zero,wait_procedure
@@ -72,10 +77,20 @@ for_loop_gsa:
 	bne t1,t0,for_loop_gsa
 call draw_array
 
-addi t0, zero, 65535
+addi t0, zero, 10000
 wait_procedure_2:
 addi t0,t0,-1
 bne t0,zero,wait_procedure_2
+
+addi t0, zero, 10000
+wait_procedure_3:
+addi t0,t0,-1
+bne t0,zero,wait_procedure_3
+
+addi t0, zero, 10000
+wait_procedure_4:
+addi t0,t0,-1
+bne t0,zero,wait_procedure_4
 
 jmpi start
 
