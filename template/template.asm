@@ -54,6 +54,7 @@ addi    sp, zero, LEDS
 ;     This procedure should never return.
 main:
 
+
 call init_game
 start:
 call wait_main
@@ -794,11 +795,55 @@ move_snake:
 ; BEGIN: save_checkpoint
 save_checkpoint:
 
+ldw t0, SEVEN_SEGS+12(zero)
+ldw t1, SCORE(zero)
+ldw t2, digit_map(zero)
+addi t3, zero, 9
+
+
+
+bne t2,t0, end_save_cp
+bge t3, t1, end_save_cp
+
+addi t0, zero, 1
+stw t0, CP_VALID(zero)
+addi v0, zero, 1
+
+addi t0,zero,0
+addi t1,zero,96
+
+for_loop_gsa:
+    slli t3,t0,2
+	ldw t2, GSA(t3)
+    stw t2,CP_GSA(t3)
+    addi t0,t0,1
+    bne t1,t0,for_loop_gsa
+
+end_save_cp:
+ret
+
 ; END: save_checkpoint
 ;-----------------------------------------------------------------------------------------
 
 ; BEGIN: restore_checkpoint
 restore_checkpoint:
+ldw t0, CP_VALID(zero)
+beq t0, zero, end_restore_cp
+
+addi t0,zero,0
+addi t1,zero,96
+
+for_loop_cp_gsa:
+    slli t3,t0,2
+	ldw t2,CP_GSA(t3)
+    stw t2,GSA(t3)
+    addi t0,t0,1
+    bne t1,t0,for_loop_cp_gsa
+
+addi v0, zero, 1
+
+end_restore_cp:
+ret
 
 ; END: restore_checkpoint
 ;-----------------------------------------------------------------------------------------
@@ -823,10 +868,30 @@ blink_score:
 	call wait_blink_score
 	ldw ra,0(sp)
 	addi sp,sp,4
-	stw t0, SEVEN_SEGS(zero)
-	stw t1, SEVEN_SEGS+4(zero)
-	stw t2, SEVEN_SEGS+8(zero)
-	stw t3, SEVEN_SEGS+12(zero)
+
+	stw t0, 0(sp)
+		stw t1, 4(sp)
+		stw t2, 8(sp)
+		stw t3, 12(sp)
+		stw t4, 16(sp)
+		stw t5, 20(sp)
+		stw t6, 24(sp)
+		stw t7, 28(sp)
+		stw ra, 32(sp)
+
+		call display_score
+
+		ldw t0, 0(sp)
+		ldw t1, 4(sp)
+		ldw t2, 8(sp)
+		ldw t3, 12(sp)
+		ldw t4, 16(sp)
+		ldw t5, 20(sp)
+		ldw t6, 24(sp)
+		ldw t7, 28(sp)
+		ldw ra, 32(sp)
+		addi sp, sp, 36
+
 	addi t4, t4, 1
 	bne t4, t5, Loop_blink
 ret
