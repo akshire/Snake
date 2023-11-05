@@ -1,5 +1,5 @@
 Timing Analyzer report for GECKO
-Sat Nov  4 17:58:38 2023
+Sun Nov  5 10:59:22 2023
 Quartus Prime Version 22.1std.2 Build 922 07/20/2023 SC Lite Edition
 
 
@@ -100,14 +100,14 @@ https://fpgasoftware.intel.com/eula.
 ; Number detected on machine ; 8           ;
 ; Maximum allowed            ; 4           ;
 ;                            ;             ;
-; Average used               ; 1.46        ;
+; Average used               ; 1.47        ;
 ; Maximum used               ; 4           ;
 ;                            ;             ;
 ; Usage by Processor         ; % Time Used ;
 ;     Processor 1            ; 100.0%      ;
-;     Processor 2            ;  17.3%      ;
-;     Processor 3            ;  15.6%      ;
-;     Processor 4            ;  13.0%      ;
+;     Processor 2            ;  18.0%      ;
+;     Processor 3            ;  15.7%      ;
+;     Processor 4            ;  13.2%      ;
 +----------------------------+-------------+
 
 
@@ -116,7 +116,7 @@ https://fpgasoftware.intel.com/eula.
 +---------------+--------+--------------------------+
 ; SDC File Path ; Status ; Read at                  ;
 +---------------+--------+--------------------------+
-; GECKO.sdc     ; OK     ; Sat Nov  4 17:58:37 2023 ;
+; GECKO.sdc     ; OK     ; Sun Nov  5 10:59:21 2023 ;
 +---------------+--------+--------------------------+
 
 
@@ -510,17 +510,18 @@ No paths to report.
 ; 2.162 ; CPU:inst|IR:IR_0|Q[29]                                   ; LEDs:LEDs_0|LEDs_reg[29]                                 ; clk          ; clk         ; 20.000       ; 0.321      ; 18.161     ;
 ; 2.166 ; CPU:inst|register_file:register_file_0|reg_array[17][5]  ; CPU:inst|register_file:register_file_0|reg_array[19][10] ; clk          ; clk         ; 20.000       ; -0.071     ; 17.765     ;
 ; 2.166 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[17][25] ; clk          ; clk         ; 20.000       ; -0.076     ; 17.760     ;
-; 2.168 ; CPU:inst|IR:IR_0|Q[24]                                   ; CPU:inst|register_file:register_file_0|reg_array[25][15] ; clk          ; clk         ; 20.000       ; -0.093     ; 17.741     ;
 ; 2.168 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[16][15] ; clk          ; clk         ; 20.000       ; -0.091     ; 17.743     ;
+; 2.168 ; CPU:inst|IR:IR_0|Q[24]                                   ; CPU:inst|register_file:register_file_0|reg_array[25][15] ; clk          ; clk         ; 20.000       ; -0.093     ; 17.741     ;
 ; 2.169 ; CPU:inst|register_file:register_file_0|reg_array[16][15] ; CPU:inst|register_file:register_file_0|reg_array[17][25] ; clk          ; clk         ; 20.000       ; -0.093     ; 17.740     ;
-; 2.177 ; CPU:inst|register_file:register_file_0|reg_array[26][1]  ; CPU:inst|register_file:register_file_0|reg_array[4][15]  ; clk          ; clk         ; 20.000       ; -0.085     ; 17.740     ;
 ; 2.177 ; CPU:inst|register_file:register_file_0|reg_array[17][14] ; CPU:inst|register_file:register_file_0|reg_array[17][25] ; clk          ; clk         ; 20.000       ; -0.077     ; 17.748     ;
+; 2.177 ; CPU:inst|register_file:register_file_0|reg_array[26][1]  ; CPU:inst|register_file:register_file_0|reg_array[4][15]  ; clk          ; clk         ; 20.000       ; -0.085     ; 17.740     ;
 ; 2.180 ; CPU:inst|IR:IR_0|Q[29]                                   ; LEDs:LEDs_0|LEDs_reg[58]                                 ; clk          ; clk         ; 20.000       ; 0.313      ; 18.135     ;
 ; 2.181 ; CPU:inst|IR:IR_0|Q[24]                                   ; CPU:inst|register_file:register_file_0|reg_array[6][15]  ; clk          ; clk         ; 20.000       ; -0.089     ; 17.732     ;
 ; 2.182 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[19][10] ; clk          ; clk         ; 20.000       ; -0.068     ; 17.752     ;
 ; 2.191 ; CPU:inst|register_file:register_file_0|reg_array[26][1]  ; LEDs:LEDs_0|LEDs_reg[88]                                 ; clk          ; clk         ; 20.000       ; 0.376      ; 18.187     ;
 ; 2.201 ; CPU:inst|IR:IR_0|Q[24]                                   ; LEDs:LEDs_0|LEDs_reg[73]                                 ; clk          ; clk         ; 20.000       ; 0.382      ; 18.183     ;
 ; 2.201 ; CPU:inst|IR:IR_0|Q[24]                                   ; LEDs:LEDs_0|LEDs_reg[75]                                 ; clk          ; clk         ; 20.000       ; 0.382      ; 18.183     ;
+; 2.202 ; CPU:inst|IR:IR_0|Q[30]                                   ; CPU:inst|register_file:register_file_0|reg_array[17][25] ; clk          ; clk         ; 20.000       ; -0.076     ; 17.724     ;
 ; 2.202 ; CPU:inst|register_file:register_file_0|reg_array[26][1]  ; LEDs:LEDs_0|LEDs_reg[92]                                 ; clk          ; clk         ; 20.000       ; 0.380      ; 18.180     ;
 ; 2.202 ; CPU:inst|register_file:register_file_0|reg_array[26][1]  ; LEDs:LEDs_0|LEDs_reg[93]                                 ; clk          ; clk         ; 20.000       ; 0.380      ; 18.180     ;
 ; 2.202 ; CPU:inst|register_file:register_file_0|reg_array[26][1]  ; seven_seg:inst1|reg[1][7]                                ; clk          ; clk         ; 20.000       ; 0.371      ; 18.171     ;
@@ -531,7 +532,6 @@ No paths to report.
 ; 2.202 ; CPU:inst|register_file:register_file_0|reg_array[26][1]  ; seven_seg:inst1|reg[1][2]                                ; clk          ; clk         ; 20.000       ; 0.371      ; 18.171     ;
 ; 2.202 ; CPU:inst|register_file:register_file_0|reg_array[26][1]  ; seven_seg:inst1|reg[1][1]                                ; clk          ; clk         ; 20.000       ; 0.371      ; 18.171     ;
 ; 2.202 ; CPU:inst|register_file:register_file_0|reg_array[26][1]  ; seven_seg:inst1|reg[1][0]                                ; clk          ; clk         ; 20.000       ; 0.371      ; 18.171     ;
-; 2.202 ; CPU:inst|IR:IR_0|Q[30]                                   ; CPU:inst|register_file:register_file_0|reg_array[17][25] ; clk          ; clk         ; 20.000       ; -0.076     ; 17.724     ;
 ; 2.205 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[25][5]  ; clk          ; clk         ; 20.000       ; -0.075     ; 17.722     ;
 ; 2.211 ; CPU:inst|IR:IR_0|Q[24]                                   ; seven_seg:inst1|reg[0][7]                                ; clk          ; clk         ; 20.000       ; 0.383      ; 18.174     ;
 ; 2.211 ; CPU:inst|IR:IR_0|Q[24]                                   ; seven_seg:inst1|reg[0][0]                                ; clk          ; clk         ; 20.000       ; 0.383      ; 18.174     ;
@@ -747,18 +747,18 @@ No paths to report.
 ; 11.662 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[25][15] ; clk          ; clk         ; 20.000       ; -0.038     ; 8.287      ;
 ; 11.663 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[18][7]  ; clk          ; clk         ; 20.000       ; -0.048     ; 8.276      ;
 ; 11.664 ; CPU:inst|IR:IR_0|Q[27]                                   ; LEDs:LEDs_0|LEDs_reg[85]                                 ; clk          ; clk         ; 20.000       ; 0.152      ; 8.475      ;
-; 11.665 ; CPU:inst|register_file:register_file_0|reg_array[21][15] ; CPU:inst|register_file:register_file_0|reg_array[17][25] ; clk          ; clk         ; 20.000       ; -0.061     ; 8.261      ;
 ; 11.665 ; CPU:inst|IR:IR_0|Q[29]                                   ; LEDs:LEDs_0|LEDs_reg[79]                                 ; clk          ; clk         ; 20.000       ; 0.151      ; 8.473      ;
 ; 11.665 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[6][15]  ; clk          ; clk         ; 20.000       ; -0.035     ; 8.287      ;
+; 11.665 ; CPU:inst|register_file:register_file_0|reg_array[21][15] ; CPU:inst|register_file:register_file_0|reg_array[17][25] ; clk          ; clk         ; 20.000       ; -0.061     ; 8.261      ;
 ; 11.666 ; CPU:inst|IR:IR_0|Q[24]                                   ; LEDs:LEDs_0|LEDs_reg[79]                                 ; clk          ; clk         ; 20.000       ; 0.159      ; 8.480      ;
 ; 11.666 ; CPU:inst|register_file:register_file_0|reg_array[26][1]  ; LEDs:LEDs_0|LEDs_reg[85]                                 ; clk          ; clk         ; 20.000       ; 0.151      ; 8.472      ;
 ; 11.667 ; CPU:inst|IR:IR_0|Q[27]                                   ; CPU:inst|register_file:register_file_0|reg_array[5][23]  ; clk          ; clk         ; 20.000       ; -0.048     ; 8.272      ;
 ; 11.670 ; CPU:inst|IR:IR_0|Q[30]                                   ; LEDs:LEDs_0|LEDs_reg[87]                                 ; clk          ; clk         ; 20.000       ; 0.146      ; 8.463      ;
 ; 11.671 ; CPU:inst|register_file:register_file_0|reg_array[17][5]  ; CPU:inst|register_file:register_file_0|reg_array[4][15]  ; clk          ; clk         ; 20.000       ; -0.057     ; 8.259      ;
 ; 11.672 ; CPU:inst|register_file:register_file_0|reg_array[17][5]  ; CPU:inst|register_file:register_file_0|reg_array[6][10]  ; clk          ; clk         ; 20.000       ; -0.037     ; 8.278      ;
-; 11.675 ; CPU:inst|register_file:register_file_0|reg_array[4][18]  ; CPU:inst|register_file:register_file_0|reg_array[4][15]  ; clk          ; clk         ; 20.000       ; -0.058     ; 8.254      ;
 ; 11.675 ; CPU:inst|IR:IR_0|Q[30]                                   ; CPU:inst|register_file:register_file_0|reg_array[17][25] ; clk          ; clk         ; 20.000       ; -0.040     ; 8.272      ;
 ; 11.675 ; CPU:inst|IR:IR_0|Q[25]                                   ; LEDs:LEDs_0|LEDs_reg[87]                                 ; clk          ; clk         ; 20.000       ; 0.140      ; 8.452      ;
+; 11.675 ; CPU:inst|register_file:register_file_0|reg_array[4][18]  ; CPU:inst|register_file:register_file_0|reg_array[4][15]  ; clk          ; clk         ; 20.000       ; -0.058     ; 8.254      ;
 ; 11.677 ; CPU:inst|register_file:register_file_0|reg_array[10][2]  ; CPU:inst|register_file:register_file_0|reg_array[4][15]  ; clk          ; clk         ; 20.000       ; -0.053     ; 8.257      ;
 ; 11.678 ; CPU:inst|IR:IR_0|Q[24]                                   ; CPU:inst|register_file:register_file_0|reg_array[23][30] ; clk          ; clk         ; 20.000       ; -0.055     ; 8.254      ;
 ; 11.678 ; CPU:inst|IR:IR_0|Q[24]                                   ; CPU:inst|register_file:register_file_0|reg_array[28][15] ; clk          ; clk         ; 20.000       ; 0.125      ; 8.434      ;
@@ -766,8 +766,8 @@ No paths to report.
 ; 11.681 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[11][25] ; clk          ; clk         ; 20.000       ; -0.046     ; 8.260      ;
 ; 11.681 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[8][25]  ; clk          ; clk         ; 20.000       ; -0.046     ; 8.260      ;
 ; 11.682 ; CPU:inst|IR:IR_0|Q[27]                                   ; CPU:inst|register_file:register_file_0|reg_array[25][15] ; clk          ; clk         ; 20.000       ; -0.051     ; 8.254      ;
-; 11.683 ; CPU:inst|register_file:register_file_0|reg_array[4][18]  ; LEDs:LEDs_0|LEDs_reg[87]                                 ; clk          ; clk         ; 20.000       ; 0.154      ; 8.458      ;
 ; 11.683 ; CPU:inst|IR:IR_0|Q[24]                                   ; CPU:inst|register_file:register_file_0|reg_array[18][7]  ; clk          ; clk         ; 20.000       ; -0.051     ; 8.253      ;
+; 11.683 ; CPU:inst|register_file:register_file_0|reg_array[4][18]  ; LEDs:LEDs_0|LEDs_reg[87]                                 ; clk          ; clk         ; 20.000       ; 0.154      ; 8.458      ;
 ; 11.685 ; CPU:inst|IR:IR_0|Q[27]                                   ; CPU:inst|register_file:register_file_0|reg_array[6][15]  ; clk          ; clk         ; 20.000       ; -0.048     ; 8.254      ;
 ; 11.685 ; CPU:inst|IR:IR_0|Q[29]                                   ; LEDs:LEDs_0|LEDs_reg[88]                                 ; clk          ; clk         ; 20.000       ; 0.150      ; 8.452      ;
 ; 11.687 ; CPU:inst|IR:IR_0|Q[24]                                   ; CPU:inst|register_file:register_file_0|reg_array[7][15]  ; clk          ; clk         ; 20.000       ; 0.142      ; 8.442      ;
@@ -780,8 +780,8 @@ No paths to report.
 ; 11.695 ; CPU:inst|IR:IR_0|Q[24]                                   ; LEDs:LEDs_0|LEDs_reg[83]                                 ; clk          ; clk         ; 20.000       ; 0.142      ; 8.434      ;
 ; 11.695 ; CPU:inst|IR:IR_0|Q[24]                                   ; LEDs:LEDs_0|LEDs_reg[91]                                 ; clk          ; clk         ; 20.000       ; 0.142      ; 8.434      ;
 ; 11.695 ; CPU:inst|IR:IR_0|Q[28]                                   ; LEDs:LEDs_0|LEDs_reg[87]                                 ; clk          ; clk         ; 20.000       ; 0.144      ; 8.436      ;
-; 11.697 ; CPU:inst|register_file:register_file_0|reg_array[4][18]  ; CPU:inst|register_file:register_file_0|reg_array[16][15] ; clk          ; clk         ; 20.000       ; -0.052     ; 8.238      ;
 ; 11.697 ; CPU:inst|IR:IR_0|Q[24]                                   ; CPU:inst|register_file:register_file_0|reg_array[17][15] ; clk          ; clk         ; 20.000       ; -0.051     ; 8.239      ;
+; 11.697 ; CPU:inst|register_file:register_file_0|reg_array[4][18]  ; CPU:inst|register_file:register_file_0|reg_array[16][15] ; clk          ; clk         ; 20.000       ; -0.052     ; 8.238      ;
 ; 11.699 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[14][10] ; clk          ; clk         ; 20.000       ; -0.047     ; 8.241      ;
 ; 11.699 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[12][10] ; clk          ; clk         ; 20.000       ; -0.047     ; 8.241      ;
 ; 11.702 ; CPU:inst|IR:IR_0|Q[24]                                   ; LEDs:LEDs_0|LEDs_reg[88]                                 ; clk          ; clk         ; 20.000       ; 0.158      ; 8.443      ;
@@ -814,10 +814,10 @@ No paths to report.
 ; 11.719 ; CPU:inst|IR:IR_0|Q[27]                                   ; LEDs:LEDs_0|LEDs_reg[83]                                 ; clk          ; clk         ; 20.000       ; 0.143      ; 8.411      ;
 ; 11.719 ; CPU:inst|IR:IR_0|Q[27]                                   ; LEDs:LEDs_0|LEDs_reg[91]                                 ; clk          ; clk         ; 20.000       ; 0.143      ; 8.411      ;
 ; 11.719 ; CPU:inst|IR:IR_0|Q[30]                                   ; LEDs:LEDs_0|LEDs_reg[85]                                 ; clk          ; clk         ; 20.000       ; 0.154      ; 8.422      ;
-; 11.720 ; CPU:inst|register_file:register_file_0|reg_array[30][5]  ; CPU:inst|register_file:register_file_0|reg_array[6][10]  ; clk          ; clk         ; 20.000       ; -0.048     ; 8.219      ;
-; 11.720 ; CPU:inst|register_file:register_file_0|reg_array[16][15] ; CPU:inst|register_file:register_file_0|reg_array[17][25] ; clk          ; clk         ; 20.000       ; -0.051     ; 8.216      ;
 ; 11.720 ; CPU:inst|IR:IR_0|Q[28]                                   ; CPU:inst|register_file:register_file_0|reg_array[16][15] ; clk          ; clk         ; 20.000       ; -0.051     ; 8.216      ;
 ; 11.720 ; CPU:inst|register_file:register_file_0|reg_array[17][14] ; CPU:inst|register_file:register_file_0|reg_array[17][25] ; clk          ; clk         ; 20.000       ; -0.040     ; 8.227      ;
+; 11.720 ; CPU:inst|register_file:register_file_0|reg_array[30][5]  ; CPU:inst|register_file:register_file_0|reg_array[6][10]  ; clk          ; clk         ; 20.000       ; -0.048     ; 8.219      ;
+; 11.720 ; CPU:inst|register_file:register_file_0|reg_array[16][15] ; CPU:inst|register_file:register_file_0|reg_array[17][25] ; clk          ; clk         ; 20.000       ; -0.051     ; 8.216      ;
 ; 11.721 ; CPU:inst|IR:IR_0|Q[29]                                   ; CPU:inst|register_file:register_file_0|reg_array[13][7]  ; clk          ; clk         ; 20.000       ; 0.150      ; 8.416      ;
 ; 11.722 ; CPU:inst|IR:IR_0|Q[24]                                   ; CPU:inst|register_file:register_file_0|reg_array[11][7]  ; clk          ; clk         ; 20.000       ; -0.043     ; 8.222      ;
 ; 11.722 ; CPU:inst|IR:IR_0|Q[24]                                   ; CPU:inst|register_file:register_file_0|reg_array[8][7]   ; clk          ; clk         ; 20.000       ; -0.043     ; 8.222      ;
@@ -1675,7 +1675,7 @@ No non-DPA dedicated SERDES Receiver circuitry present in device or used in desi
 Info: *******************************************************************
 Info: Running Quartus Prime Timing Analyzer
     Info: Version 22.1std.2 Build 922 07/20/2023 SC Lite Edition
-    Info: Processing started: Sat Nov  4 17:58:36 2023
+    Info: Processing started: Sun Nov  5 10:59:20 2023
 Info: Command: quartus_sta GECKO -c GECKO
 Info: qsta_default_script.tcl version: #1
 Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
@@ -1738,8 +1738,8 @@ Info (332146): Worst-case minimum pulse width slack is 9.206
 Info (332102): Design is not fully constrained for setup requirements
 Info (332102): Design is not fully constrained for hold requirements
 Info: Quartus Prime Timing Analyzer was successful. 0 errors, 1 warning
-    Info: Peak virtual memory: 4834 megabytes
-    Info: Processing ended: Sat Nov  4 17:58:38 2023
+    Info: Peak virtual memory: 4838 megabytes
+    Info: Processing ended: Sun Nov  5 10:59:22 2023
     Info: Elapsed time: 00:00:02
     Info: Total CPU time (on all processors): 00:00:01
 

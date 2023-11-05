@@ -53,51 +53,52 @@ addi    sp, zero, LEDS
 ; return values
 ;     This procedure should never return.
 main:
+
+call init_game
 start:
-call clear_leds
+call wait_main
+call get_input
+call hit_test
 
-addi t0, zero, 10000
-wait_procedure_5:
-addi t0,t0,-1
-bne t0,zero,wait_procedure_5
 
-addi t0, zero, 10000
-wait_procedure:
-addi t0,t0,-1
-bne t0,zero,wait_procedure
+beq v0, zero,main_case_no_hit
+addi t0,zero,1
+beq v0,t0, main_case_hit_food
+addi t0,zero,2
+beq v0,t0,main_case_end_game
 
-addi t0,zero,0
-addi t1,zero,96
-addi t2, zero,1
 
-for_loop_gsa:
-	slli t3,t0,2
-	stw t2,GSA(t3)
+main_case_no_hit:
+	addi a0,zero,0
+	jmpi next_step_main
+	
+main_case_hit_food:
+	addi a0, zero,1
+	ldw t0, SCORE(zero)
 	addi t0,t0,1
-	bne t1,t0,for_loop_gsa
+	stw t0, SCORE(zero)
+	call display_score
+	call create_food
+	jmpi next_step_main
+
+main_case_end_game:
+	call blink_score
+	jmpi main
+
+next_step_main:
+call move_snake
+call clear_leds
 call draw_array
-
-addi t0, zero, 10000
-wait_procedure_2:
-addi t0,t0,-1
-bne t0,zero,wait_procedure_2
-
-addi t0, zero, 10000
-wait_procedure_3:
-addi t0,t0,-1
-bne t0,zero,wait_procedure_3
-
-addi t0, zero, 10000
-wait_procedure_4:
-addi t0,t0,-1
-bne t0,zero,wait_procedure_4
 
 jmpi start
 
-
-
-
-ret
+wait_main:
+	addi t0, zero, 0
+	addi t1, zero, 100
+	wait_procedure:
+	addi t0,t0,1
+	bne t0,zero,wait_procedure
+	ret
 ;-----------------------------------------------------------------------------------------
 ; BEGIN: clear_leds
 ; arguments
@@ -447,7 +448,6 @@ hit_test:
 
 	hit_test_hit_food:
 		addi v0,zero, 1
-		addi a0, zero, 1
 		jmpi hit_test_done
 
 	hit_test_no_collision:
@@ -476,8 +476,8 @@ get_input:
 		ldw t6, HEAD_X(zero)
 		ldw t7, HEAD_Y(zero)
 		addi t5,zero,0 ; address counter
-		slli t0, t6,5 ; x in address
-		slli t2,t7,2; y counter
+		slli t0, t6, 5 ; x in address
+		slli t2,t7, 2; y counter
 		add t5, t0, t2
 		; loading the direction
 		ldw t6, GSA(t5); old direction
