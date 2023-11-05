@@ -94,10 +94,20 @@ jmpi start
 
 wait_main:
 	addi t0, zero, 0
-	addi t1, zero, 100
-	wait_procedure:
+	addi t1, zero, 1000
+	addi t2, zero, 0
+	wait_procedure_1:
 	addi t0,t0,1
-	bne t0,zero,wait_procedure
+	
+	addi t2,zero,0
+	wait_procedure_2:
+	addi t2,t2,1
+	bne t2,t1,wait_procedure_2
+	
+	addi t0,t0,1
+	bne t0,t1,wait_procedure_1
+
+
 	ret
 ;-----------------------------------------------------------------------------------------
 ; BEGIN: clear_leds
@@ -813,7 +823,7 @@ blink_score:
 	stw ra, 0(sp)
 	call wait_blink_score
 	ldw ra,0(sp)
-	addi sp,sp+4
+	addi sp,sp,4
 	stw t0, SEVEN_SEGS(zero)
 	stw t1, SEVEN_SEGS+4(zero)
 	stw t2, SEVEN_SEGS+8(zero)
@@ -823,7 +833,7 @@ blink_score:
 ret
 wait_blink_score:
 	addi t7, zero,-1
-	addi t6, zero, 1000
+	addi t6, zero, 30000
 	loop_wait:
 	addi t7, t7, 1
 	bne t7, t6, loop_wait

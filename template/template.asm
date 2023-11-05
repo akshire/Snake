@@ -94,10 +94,18 @@ jmpi start
 
 wait_main:
 	addi t0, zero, 0
-	addi t1, zero, 100
-	wait_procedure:
+	addi t1, zero, 5000
+	addi t2, zero, 0
+	wait_procedure_1:
 	addi t0,t0,1
-	bne t0,t1,wait_procedure
+	
+	addi t2,zero,0
+	wait_procedure_2:
+	addi t2,t2,1
+	bne t2,t1,wait_procedure_2
+	
+	addi t0,t0,1
+	bne t0,t1,wait_procedure_1
 	ret
 ;-----------------------------------------------------------------------------------------
 ; BEGIN: clear_leds
@@ -515,9 +523,7 @@ hit_test:
 ;     v0 <- Direction of the Head
 get_input:
 	; Getting the Values Buttons and Buttons + 4
-	addi t0, zero, 0x0004
-	; Buttons + 4
-	ldw t1, BUTTONS(t0)
+	ldw t1, BUTTONS+4(zero)
 	; checking which Button was pressed with priority to checkpoint
 	addi t3, zero, 0x0010 ; 10000
 	bge t1, t3, case_checkpoint
@@ -589,6 +595,7 @@ get_input:
 		addi v0, zero, BUTTON_NONE
 
 get_input_done:
+		stw zero, BUTTONS+4(zero)
 		ret
 ; END: get_input
 ;-----------------------------------------------------------------------------------------
@@ -812,8 +819,10 @@ blink_score:
 	addi sp, sp, -4
 	stw ra, 0(sp)
 	call wait_blink_score
+	call wait_blink_score
+	call wait_blink_score
 	ldw ra,0(sp)
-	addi sp,sp+4
+	addi sp,sp,4
 	stw t0, SEVEN_SEGS(zero)
 	stw t1, SEVEN_SEGS+4(zero)
 	stw t2, SEVEN_SEGS+8(zero)
@@ -823,7 +832,7 @@ blink_score:
 ret
 wait_blink_score:
 	addi t7, zero,-1
-	addi t6, zero, 1000
+	addi t6, zero, 30000
 	loop_wait:
 	addi t7, t7, 1
 	bne t7, t6, loop_wait
