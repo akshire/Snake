@@ -52,13 +52,23 @@ addi    sp, zero, LEDS
 ;
 ; return values
 ;     This procedure should never return.
+
+; PROBLEME INDENITIFIER : 
+; 1) lORSQU ON MONTE, ET QU ON VEUT ALLER A GAUCHE, ON PEUT PAS A LA LIMITE ET DUCOUP ON PERD
+; 2) BLINK SCORE FAIT SHUT DOWN LE PROGRAM (SHUT DOWN A 11, PROBABLEMENT A CAUSE DE BLINK SCORE)
+; 3) CREATE FOOD SPAWN LORS DU RESTORE DE LA PARTIE, ALORS QU IL DEVRAIT TOUJOURS ÊTRE A LA MEME PLACE
+; 4) LORSQUE ON TOURNE D UNE FOOD, IL Y EN A UNE DEUXIEME QUI APPARAIT(PEUT ETRE HIT TEST)
+
 main:
 stw zero, CP_VALID(zero)
 main_official:
 call init_game
 start:
 call wait_main
+call wait_main
+call wait_main
 call get_input
+call wait_main
 addi t0, zero, 5
 beq v0, t0, main_button_checkpoint_pressed
 call hit_test
@@ -74,6 +84,7 @@ main_button_checkpoint_pressed:
 	ldw t0, CP_VALID(zero)
 	beq t0,zero,start
 	call restore_checkpoint
+	call wait_main
 	jmpi after_restore
 
 main_case_no_hit:
@@ -86,8 +97,10 @@ main_case_hit_food:
 	addi t0,t0,1
 	stw t0, SCORE(zero)
 	call save_checkpoint
+	call wait_main
 	call display_score
 	call create_food
+	
 	jmpi next_step_main
 
 main_case_end_game:
@@ -95,8 +108,11 @@ main_case_end_game:
 	jmpi main_official
 
 next_step_main:
+call wait_main
 call move_snake
+stw zero, 0(a0)
 after_restore:
+call wait_main
 call clear_leds
 call draw_array
 
@@ -104,7 +120,7 @@ jmpi start
 
 wait_main:
 	addi t0, zero, 0
-	addi t1, zero, 3000
+	addi t1, zero, 1500
 	addi t2, zero, 0
 	wait_procedure_1:
 	addi t0,t0,1
@@ -330,7 +346,8 @@ init_game:
 	stw zero, HEAD_Y(zero)
 	stw zero, TAIL_X(zero)
 	stw zero, TAIL_Y(zero)
-	stw zero, SCORE(zero)
+	addi t0, zero, 8
+	stw t0, SCORE(zero); TODO CHANGER
 	addi t0, zero, DIR_RIGHT
 	stw t0, GSA(zero)
 
@@ -841,10 +858,21 @@ addi t3, zero, 9
 bne t2,t0, end_save_cp
 bge t3, t1, end_save_cp
 
+ldw t0, SCORE(zero)
+stw t0, CP_SCORE(zero)
+ldw t0, HEAD_X(zero)
+stw t0, CP_HEAD_X(zero)
+ldw t0, HEAD_Y(zero)
+stw t0, CP_HEAD_Y(zero)
+ldw t0, TAIL_X(zero)
+stw t0, CP_TAIL_X(zero)
+ldw t0, TAIL_Y(zero)
+stw t0 , CP_TAIL_Y(zero)
+
 addi t0, zero, 1
 stw t0, CP_VALID(zero)
-addi v0, zero, 1
 
+addi v0, zero, 1
 addi t0,zero,0
 addi t1,zero,96
 
@@ -854,9 +882,10 @@ for_loop_gsa:
     stw t2,CP_GSA(t3)
     addi t0,t0,1
     bne t1,t0,for_loop_gsa
+
 addi sp,sp,-4
 stw ra, 0(sp)
-call blink_score
+;call blink_score
 ldw ra, 0(sp)
 addi sp,sp,4
 end_save_cp:
@@ -871,6 +900,16 @@ restore_checkpoint:
 ldw t0, CP_VALID(zero)
 beq t0, zero, end_restore_cp
 
+ldw t0, CP_SCORE(zero)
+stw t0, SCORE(zero)
+ldw t0, CP_HEAD_X(zero)
+stw t0, HEAD_X(zero)
+ldw t0, CP_HEAD_Y(zero)
+stw t0, HEAD_Y(zero)
+ldw t0, CP_TAIL_X(zero)
+stw t0, TAIL_X(zero)
+ldw t0, CP_TAIL_Y(zero)
+stw t0 , TAIL_Y(zero)
 addi t0,zero,0
 addi t1,zero,96
 
@@ -884,7 +923,7 @@ for_loop_cp_gsa:
 addi v0, zero, 1
 addi sp,sp,-4
 stw ra, 0(sp)
-call blink_score
+;call blink_score
 ldw ra, 0(sp)
 addi sp,sp,4
 end_restore_cp:
