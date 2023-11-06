@@ -59,6 +59,8 @@ call init_game
 start:
 call wait_main
 call get_input
+addi t0, zero, 5
+beq v0, t0, main_button_checkpoint_pressed
 call hit_test
 
 
@@ -68,6 +70,11 @@ beq v0,t0, main_case_hit_food
 addi t0,zero,2
 beq v0,t0,main_case_end_game
 
+main_button_checkpoint_pressed:
+	ldw t0, CP_VALID(zero)
+	beq t0,zero,start
+	call restore_checkpoint
+	jmpi after_restore
 
 main_case_no_hit:
 	addi a0,zero,0
@@ -86,11 +93,10 @@ main_case_hit_food:
 main_case_end_game:
 	call wait_main
 	jmpi main_official
-  00
-  00
 
 next_step_main:
 call move_snake
+after_restore:
 call clear_leds
 call draw_array
 
@@ -98,7 +104,7 @@ jmpi start
 
 wait_main:
 	addi t0, zero, 0
-	addi t1, zero, 5000
+	addi t1, zero, 3000
 	addi t2, zero, 0
 	wait_procedure_1:
 	addi t0,t0,1
