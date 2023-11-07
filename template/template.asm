@@ -81,31 +81,34 @@ addi t0,zero,2
 beq v0,t0,main_case_end_game
 
 main_button_checkpoint_pressed:
-	ldw t0, CP_VALID(zero)
-	beq t0,zero,start
-	call restore_checkpoint
-	call wait_main
-	jmpi after_restore
+    ldw t0, CP_VALID(zero)
+    beq t0,zero,start
+    call restore_checkpoint
+    call wait_main
+    jmpi after_restore
 
 main_case_no_hit:
-	addi a0,zero,0
-	jmpi next_step_main
-	
+    addi a0,zero,0
+    jmpi next_step_main
+    
 main_case_hit_food:
-	addi a0, zero,1
-	ldw t0, SCORE(zero)
-	addi t0,t0,1
-	stw t0, SCORE(zero)
-	call save_checkpoint
-	call wait_main
-	call display_score
-	call create_food
-	
-	jmpi next_step_main
+    addi a0, zero,1
+    ldw t0, SCORE(zero)
+    addi t0,t0,1
+    stw t0, SCORE(zero)
+    call wait_main
+    call display_score
+	call move_snake
+    call create_food
+    call save_checkpoint
+
+
+    
+    jmpi after_restore
 
 main_case_end_game:
-	call wait_main
-	jmpi main_official
+    call wait_main
+    jmpi main_official
 
 next_step_main:
 call wait_main
@@ -119,20 +122,21 @@ call draw_array
 jmpi start
 
 wait_main:
-	addi t0, zero, 0
-	addi t1, zero, 1500
-	addi t2, zero, 0
-	wait_procedure_1:
-	addi t0,t0,1
-	
-	addi t2,zero,0
-	wait_procedure_2:
-	addi t2,t2,1
-	bne t2,t1,wait_procedure_2
-	
-	addi t0,t0,1
-	bne t0,t1,wait_procedure_1
-	ret
+    addi t0, zero, 0
+    addi t1, zero, 1500
+    addi t2, zero, 0
+    wait_procedure_1:
+    addi t0,t0,1
+    
+    addi t2,zero,0
+    wait_procedure_2:
+    addi t2,t2,1
+    bne t2,t1,wait_procedure_2
+    
+    addi t0,t0,1
+    bne t0,t1,wait_procedure_1
+    ret
+
 ;-----------------------------------------------------------------------------------------
 ; BEGIN: clear_leds
 ; arguments
@@ -854,9 +858,12 @@ ldw t2, digit_map(zero)
 addi t3, zero, 9
 
 
+stw t0, SEVEN_SEGS+12(zero)
 
 bne t2,t0, end_save_cp
 bge t3, t1, end_save_cp
+
+
 
 ldw t0, SCORE(zero)
 stw t0, CP_SCORE(zero)
@@ -883,9 +890,9 @@ for_loop_gsa:
     addi t0,t0,1
     bne t1,t0,for_loop_gsa
 
-addi sp,sp,-4
+addi sp, sp,-4
 stw ra, 0(sp)
-;call blink_score
+call blink_score
 ldw ra, 0(sp)
 addi sp,sp,4
 end_save_cp:
@@ -921,9 +928,10 @@ for_loop_cp_gsa:
     bne t1,t0,for_loop_cp_gsa
 
 addi v0, zero, 1
-addi sp,sp,-4
+
+addi sp, sp,-4
 stw ra, 0(sp)
-;call blink_score
+call blink_score
 ldw ra, 0(sp)
 addi sp,sp,4
 end_restore_cp:
@@ -934,18 +942,16 @@ ret
 ;-----------------------------------------------------------------------------------------
 ; BEGIN: blink_score
 blink_score:
-	ldw t0, SEVEN_SEGS(zero)
-	ldw t1, SEVEN_SEGS+4(zero)
-	ldw t2, SEVEN_SEGS+8(zero)
-	ldw t3, SEVEN_SEGS+12(zero)
+	
 	addi t4, zero, 0
-	addi t5, zero, 50
+	addi t5, zero, 5
 
 	Loop_blink:
 	stw zero, SEVEN_SEGS(zero)
 	stw zero, SEVEN_SEGS+4(zero)
 	stw zero, SEVEN_SEGS+8(zero)
 	stw zero, SEVEN_SEGS+12(zero)
+
 	addi sp, sp, -4
 	stw ra, 0(sp)
 	call wait_blink_score
@@ -954,39 +960,61 @@ blink_score:
 	ldw ra,0(sp)
 	addi sp,sp,4
 
+	addi sp,sp,-36
 	stw t0, 0(sp)
-		stw t1, 4(sp)
-		stw t2, 8(sp)
-		stw t3, 12(sp)
-		stw t4, 16(sp)
-		stw t5, 20(sp)
-		stw t6, 24(sp)
-		stw t7, 28(sp)
-		stw ra, 32(sp)
+	stw t1, 4(sp)
+	stw t2, 8(sp)
+	stw t3, 12(sp)
+	stw t4, 16(sp)
+	stw t5, 20(sp)
+	stw t6, 24(sp)
+	stw t7, 28(sp)
+	stw ra, 32(sp)
 
-		call display_score
+	call display_score
 
-		ldw t0, 0(sp)
-		ldw t1, 4(sp)
-		ldw t2, 8(sp)
-		ldw t3, 12(sp)
-		ldw t4, 16(sp)
-		ldw t5, 20(sp)
-		ldw t6, 24(sp)
-		ldw t7, 28(sp)
-		ldw ra, 32(sp)
-		addi sp, sp, 36
+	ldw t0, 0(sp)
+	ldw t1, 4(sp)
+	ldw t2, 8(sp)
+	ldw t3, 12(sp)
+	ldw t4, 16(sp)
+	ldw t5, 20(sp)
+	ldw t6, 24(sp)
+	ldw t7, 28(sp)		
+	ldw ra, 32(sp)
+	addi sp, sp, 36
 
 	addi t4, t4, 1
+
+
+	addi sp, sp, -4
+	stw ra, 0(sp)
+	call wait_blink_score
+	call wait_blink_score
+	call wait_blink_score
+	ldw ra,0(sp)
+	addi sp,sp,4
+
+
 	bne t4, t5, Loop_blink
 ret
+
+
 wait_blink_score:
-	addi t7, zero,-1
-	addi t6, zero, 30000
-	loop_wait:
-	addi t7, t7, 1
-	bne t7, t6, loop_wait
-ret
+	addi t0, zero, 0
+    addi t1, zero, 1500
+    addi t2, zero, 0
+    wait_procedure_3:
+    addi t0,t0,1
+    
+    addi t2,zero,0
+    wait_procedure_4:
+    addi t2,t2,1
+    bne t2,t1,wait_procedure_4
+    
+    addi t0,t0,1
+    bne t0,t1,wait_procedure_3
+    ret
 ; END: blink_score
 digit_map:
 .word 0xFC ; 0
