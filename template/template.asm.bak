@@ -350,7 +350,7 @@ init_game:
 	stw zero, HEAD_Y(zero)
 	stw zero, TAIL_X(zero)
 	stw zero, TAIL_Y(zero)
-	addi t0, zero, 8
+	addi t0, zero,0
 	stw t0, SCORE(zero); TODO CHANGER
 	addi t0, zero, DIR_RIGHT
 	stw t0, GSA(zero)
@@ -476,6 +476,7 @@ hit_test:
 		beq t2,t6,hit_test_hit_snake
 		addi t6, t6,1
 		beq t2,t6,hit_test_hit_food
+		jmpi hit_test_no_collision
 
 	hit_test_up:
 		beq t1,zero,hit_test_hit_screen_boundary
